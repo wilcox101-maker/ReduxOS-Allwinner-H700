@@ -7,7 +7,7 @@ Anbernic stock firmware — no vendor binaries, no stock BIOS, no device-lock, n
 A completely wide-open base, on hardware you own, that you can read, rebuild, and change.
 
 > Status: **early / desk + QEMU**. Nothing here has been validated on a physical device yet. See
-> [`docs/status.md`](docs/status.md). Desk-only findings are marked as such throughout.
+> [`docs/status.md`](docs/status.md) and the [`docs/roadmap.md`](docs/roadmap.md). Desk-only findings are marked as such throughout.
 
 ## What it is
 - **Base:** Ubuntu 24.04 LTS (Noble), `arm64`/aarch64, built from a package manifest — no stock rootfs.
