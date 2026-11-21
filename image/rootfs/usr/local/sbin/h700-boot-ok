@@ -1,0 +1,20 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-only
+# this boot reached multi-user, so the running kernel is good: disarm u-boot's boot counter.
+# If u-boot had to fall back (altbootcmd sets fallback_used=1), make the fallback menu the normal one,
+# so the next reboot doesn't try the failed kernel again; the next kernel install starts a new trial.
+# (Later the frontend's own readiness should be the signal, not just multi-user.target.)
+set -eu
+[ -f /boot/uboot.env ] || exit 0
+get() { fw_printenv -n "$1" 2>/dev/null || echo 0; }
+if [ "$(get fallback_used)" = 1 ]; then
+	FAILED=$(awk '/^label l0$/{f=1} f&&/^[ \t]*linux /{sub(/.*\/vmlinuz-/,""); print; exit}' /boot/extlinux/extlinux.conf)
+	cp /boot/extlinux/extlinux-fallback.conf /boot/extlinux/extlinux.conf.new
+	mv /boot/extlinux/extlinux.conf.new /boot/extlinux/extlinux.conf
+	mkdir -p /var/lib/h700 && echo "$(date -u +%FT%TZ) kernel $FAILED failed $(get bootlimit) boot attempts; running $(uname -r)" >> /var/lib/h700/failed-kernels
+	fw_setenv fallback_used 0
+	echo "h700-boot-ok: fell back from kernel $FAILED to $(uname -r); fallback menu made default"
+fi
+if [ "$(get upgrade_available)" = 1 ]; then
+	fw_setenv upgrade_available 0 && fw_setenv bootcount 0 && echo "h700-boot-ok: $(uname -r) confirmed, boot trial cleared"
+fi

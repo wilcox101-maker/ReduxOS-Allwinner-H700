@@ -1,0 +1,13 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-only
+# Inner session for redux-kbapp: runs inside cage (WAYLAND_DISPLAY is set). Starts the gamepad
+# pointer bridge and the fly-out OSK, runs the app, and tears them down on exit.
+set -u
+PTR=/usr/local/bin/redux-osk-pointer
+[ -x "$PTR" ] && "$PTR" & PP=$!
+# wvkbd-mobintl: -L sets the landscape height (px). It sits as a layer-shell panel on the bottom edge
+# and "flies out" when shown; tapping/clicking a key types into the focused app.
+wvkbd-mobintl -L 220 --hidden & WP=$!
+"$@"; rc=$?
+kill "$WP" "$PP" 2>/dev/null
+exit "$rc"

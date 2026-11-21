@@ -1,0 +1,22 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-only
+# redux-launch PATH — run a PortMaster port, PortMaster itself, or a native app script for the player
+# session. Called by the session loop after the redux_exec launcher core hands over a path.
+# Runs as the calling (unprivileged) user; only scripts under the games card's PORTS/APPS folders or
+# the installed PortMaster are accepted. Output goes to ~/redux-launch.log.
+set -u
+p=$(readlink -f -- "${1:-}") || { echo "redux-launch: bad path" >&2; exit 2; }
+case "$p" in
+  /roms/PORTS/*|/roms/APPS/*|/opt/tools/PortMaster/*) ;;
+  *) echo "redux-launch: refusing $p (only /roms/PORTS, /roms/APPS, PortMaster)" >&2; exit 2;;
+esac
+[ -f "$p" ] || { echo "redux-launch: missing $p" >&2; exit 2; }
+[ -r /etc/default/reduxos-portmaster ] && . /etc/default/reduxos-portmaster
+log="$HOME/redux-launch.log"
+echo "== $(date -Is) $p" >> "$log"
+cd "$(dirname "$p")" || exit 2
+case "$p" in
+  *.desktop) cmd=$(sed -n 's/^Exec=//p' "$p" | head -1); bash -c "$cmd" >> "$log" 2>&1 ;;
+  *)         bash "$p" >> "$log" 2>&1 ;;
+esac
+rc=$?; echo "== exit $rc" >> "$log"; exit $rc

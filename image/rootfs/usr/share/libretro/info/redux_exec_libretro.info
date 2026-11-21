@@ -1,0 +1,12 @@
+# ReduxOS launcher core: hands a .sh/.desktop path to the player session, which runs it.
+display_name = "ReduxOS Launcher (Ports/Apps)"
+authors = "ReduxOS"
+supported_extensions = "sh|desktop"
+corename = "ReduxOS Launcher"
+license = "GPLv2"
+permissions = ""
+display_version = "1.0"
+categories = "Launcher"
+systemname = "Ports"
+supports_no_game = "false"
+needs_fullpath = "true"

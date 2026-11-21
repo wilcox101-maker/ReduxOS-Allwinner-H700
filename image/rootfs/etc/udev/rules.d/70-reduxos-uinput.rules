@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# ReduxOS: let the input group create virtual pads/pointers through uinput, for PortMaster's
+# gptokeyb (gamepad -> keys for ports) and redux-osk-pointer (fly-out OSK). The player is in "input"
+# already (it reads every pad); this adds the ability to synthesize input, nothing beyond it.
+KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"

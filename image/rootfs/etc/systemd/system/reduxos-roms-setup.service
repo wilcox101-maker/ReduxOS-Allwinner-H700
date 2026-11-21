@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-2.0-only
+[Unit]
+Description=ReduxOS game folder tree + BIOS drop-in structure
+After=local-fs.target
+ConditionPathExists=/usr/local/bin/redux-setup-roms
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/redux-setup-roms /roms
+[Install]
+WantedBy=multi-user.target

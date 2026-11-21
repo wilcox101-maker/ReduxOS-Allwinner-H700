@@ -1,0 +1,3 @@
+Games root. Put ROMs in /roms/<SYSTEM>/ and BIOS in /roms/bios/.
+Run redux-setup-roms to (re)create the folder tree; redux-bios-check to validate BIOS.
+Mount a dedicated games microSD here to use the big card instead of the root card.

@@ -1,0 +1,4 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-only
+# Runs after zz-u-boot-menu (run-parts order).
+exec /usr/local/sbin/h700-kernel-fallback "$@"

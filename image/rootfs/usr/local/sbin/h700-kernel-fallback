@@ -1,0 +1,25 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-only
+# after u-boot-menu has rewritten /boot/extlinux/extlinux.conf (newest kernel = label l0), write
+# extlinux-fallback.conf whose default is the previous kernel (l1), and arm u-boot's boot counter so a
+# new kernel that fails to come up `bootlimit` times in a row is skipped automatically (u-boot's
+# altbootcmd boots the fallback file). Called from /etc/kernel/postinst.d and postrm.d with the version.
+set -eu
+CONF=/boot/extlinux/extlinux.conf; FB=/boot/extlinux/extlinux-fallback.conf
+log() { echo "h700-kernel-fallback: $*"; }
+[ -f "$CONF" ] || { log "no $CONF yet"; exit 0; }
+if grep -q '^label l1$' "$CONF"; then
+	sed 's/^default l0$/default l1/' "$CONF" > "$FB.new" && mv "$FB.new" "$FB"
+	log "fallback entry: $(awk '/^label l1$/{f=1} f&&/menu label/{sub(/^[ \t]*menu label /,""); print; exit}' "$CONF")"
+else
+	cp "$CONF" "$FB.new" && mv "$FB.new" "$FB"
+	log "only one kernel installed: fallback = same kernel"
+fi
+# Arm the trial only when a kernel is being installed (postinst passes the version; postrm runs with
+# DEB_MAINT_PARAMS containing "remove"/"purge") and u-boot has already saved an environment.
+case "${DEB_MAINT_PARAMS:-}" in *remove*|*purge*) exit 0 ;; esac
+if [ -f /boot/uboot.env ] && command -v fw_setenv >/dev/null; then
+	fw_setenv upgrade_available 1 && fw_setenv bootcount 0 && log "boot trial armed for ${1:-new kernel}"
+else
+	log "u-boot environment not found: trial not armed (first boot pending?)"
+fi
