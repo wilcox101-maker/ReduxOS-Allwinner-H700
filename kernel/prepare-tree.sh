@@ -16,7 +16,8 @@
 # Usage:  kernel/prepare-tree.sh [--bindings] [--no-checks]
 #   WORK=<dir>  work directory (default ./.work; never committed)
 # Needs (Ubuntu 24.04): git make gcc gcc-aarch64-linux-gnu bc flex bison libssl-dev device-tree-compiler
-#   python3, curl; for --bindings and the DTB schema check: pip install dtschema yamllint
+#   python3 python3-ply python3-git (checkpatch's SPDX check), curl; for the DTB schema check and
+#   --bindings: pip install dtschema yamllint
 set -euo pipefail
 
 LINUX_URL=https://github.com/torvalds/linux.git
