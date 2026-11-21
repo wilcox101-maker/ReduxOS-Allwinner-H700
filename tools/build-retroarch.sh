@@ -22,9 +22,9 @@
 set -euo pipefail
 VER=1.22.2
 PIN=69a4f0ea1e8aaf442ae4858f2e7f2b31a1776576      # libretro/RetroArch tag v1.22.2
-OUT=$(readlink -f "${1:-$PWD/out-retroarch}"); WORK=$(readlink -f "${2:-$PWD/.work/retroarch}")
+OUT=${1:-$PWD/out-retroarch}; WORK=${2:-$PWD/.work/retroarch}
+mkdir -p "$OUT" "$WORK"; OUT=$(readlink -f "$OUT"); WORK=$(readlink -f "$WORK")
 T=aarch64-linux-gnu
-mkdir -p "$OUT" "$WORK"
 for t in $T-gcc $T-g++ $T-strip $T-readelf git make pkgconf file dpkg-deb dpkg-query; do
   command -v "$t" >/dev/null || { echo "missing: $t" >&2; exit 2; }; done
 

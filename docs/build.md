@@ -1,6 +1,9 @@
 # Building ReduxOS — Allwinner H700
 
 ## Host requirements
+`sudo tools/setup-build-host.sh` sets up an Ubuntu 24.04 x86_64 host (CI uses it): cross toolchain, image
+tools, QEMU, the arm64 multiarch `-dev` packages and the aarch64 binfmt handler.
+
 - An aarch64 build environment: native arm64, **or** x86_64 with `qemu-user-static` + `binfmt-support`.
 - Tools: `debootstrap`/`mmdebstrap` or the project's apt-based rootfs builder, `genimage`/`mkfs`, `zstd`,
   `qemu-system-aarch64` (for the smoke test), build-essential + cross headers for source components.
@@ -20,9 +23,13 @@
      type. The DRAM type is part of the image name, a mismatch with the binary or its `.config` is an error
      (LPDDR3 settings put 1.2 V on 1.1 V LPDDR4), and `image/check-boot-layout.py` checks the result. Build
      one image per DRAM type. The kernel and u-boot build scripts are not in this repo yet (docs/status.md).
-3. `./image/qemu/smoke-test.sh ./out/<image>` — boots in QEMU and runs the checks (boot, frontend present,
-   hardening, no desktop stacks, licence check).
-4. Writing to an SD card is manual and deliberate (see below) — the repo never writes a card for you.
+3. Checks on the built tree (read-only, on the build host):
+   `sudo ./image/check-hardening.sh ./out` (SECURITY.md baseline) and `sudo ./tools/check-licences.sh ./out`
+   (every component maps to a PROVENANCE.md row; no stock, BIOS or ROM material).
+4. `sudo ./image/qemu/smoke-test.sh ./out/<image>.img` — boots a copy in QEMU (`virt`, `-cpu cortex-a53`, 512 MB)
+   and checks first boot, per-unit identity, SSH off, firewall, no shipped credential, `retroarch --features`
+   on the A53, every core loading, and no desktop stack in RetroArch's load closure. ~25 min under TCG.
+5. Writing to an SD card is manual and deliberate (see below) — the repo never writes a card for you.
 
 ## Injected-at-build (never committed)
 Large or source-built artifacts are produced by `tools/` scripts and injected via env vars (e.g.
@@ -66,5 +73,5 @@ and grows the root partition to the card.
 > automatically.
 
 ## Status
-`image/build-image.sh` builds QEMU images today (desk only); the source-built frontend, cores and checks land
-in follow-up PRs — see [`status.md`](status.md).
+CI builds a `--ci` image on every PR (source-built RetroArch, launcher core, OSK pointer, PortMaster injected),
+runs the hardening and licence checks and the QEMU smoke test. Desk/QEMU only — see [`status.md`](status.md).

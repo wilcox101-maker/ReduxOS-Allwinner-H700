@@ -1,0 +1,28 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-only
+# In-guest smoke check, injected into a COPY of the image's root partition by qemu-test.sh (never into
+# the original image). Prints a report on the console between GCBEGIN/GCEND, then powers off.
+sleep 30
+echo "GCBEGIN"
+echo "== system: $(systemctl is-system-running)"; systemctl --failed --no-legend --plain
+echo "== firstboot"; journalctl -b -u h700-firstboot --no-pager -o cat | tail -6
+echo "== disk"; lsblk -o NAME,SIZE,FSTYPE,LABEL,MOUNTPOINTS /dev/vda; df -h / /boot | tail -2
+echo "== ssh host keys: $(ls /etc/ssh/ssh_host_*_key 2>/dev/null | wc -l)"
+echo "== machine-id: $(cat /etc/machine-id)"
+echo "== apt: $(apt --version 2>&1 | head -1)"
+echo "== services"; systemctl is-active systemd-networkd iwd earlyoom systemd-resolved systemd-zram-setup@zram0 nftables | paste -sd' '
+echo "== network"; networkctl --no-pager list; resolvectl query ports.ubuntu.com 2>&1 | head -2
+echo "== firewall: $(systemctl is-active nftables) $(nft list chain inet reduxos input 2>/dev/null | grep -c 'policy drop')"
+install -d -m 0755 /run/sshd	# sshd -T needs it
+echo "== sshd: listening=$(systemctl is-active ssh.socket ssh.service | paste -sd,) enabled=$(systemctl is-enabled ssh.socket 2>/dev/null) $(sshd -T 2>&1 | grep -E '^(permitrootlogin|passwordauthentication) ' | tr '\n' ' ')"
+echo "== creds: root=$(passwd -S root | awk '{print $2}') player=$(passwd -S player | awk '{print $2}') redux=$(passwd -S redux | awk '{print $2}') keys=$(find /root /home -name 'authorized_keys*' 2>/dev/null | wc -l)"
+echo "== frontend: player=$(getent passwd player >/dev/null && echo yes || echo no) ra=$(command -v retroarch >/dev/null && echo yes || echo no) cores=$(ls /usr/lib/aarch64-linux-gnu/libretro/*.so 2>/dev/null | wc -l) autologin=$(grep -ho 'autologin player' /etc/systemd/system/getty@tty1.service.d/*.conf 2>/dev/null | head -1) thd=$(systemctl is-active triggerhappy) audio=$(systemctl is-active reduxos-audio-init)"
+echo "== ra-closure: $(ldd "$(command -v retroarch)" 2>/dev/null | awk '{print $1}' | grep -E 'Qt[56]|libX|libxcb|wayland|pulse|jack|SDL|vulkan' | tr '\n' ' ')"
+command -v python3 >/dev/null && [ -x /usr/local/sbin/frontend-check.py ] && timeout 900 /usr/local/sbin/frontend-check.py 2>&1 | grep "^== fe"
+echo "== ra-features: $(retroarch --features 2>/dev/null | tr -d ' \t' | grep -iE '^(KMS|EGL|OpenGLES|udev|ALSA|FFmpeg|Qt|X11|Wayland|PulseAudio|JACK|SDL2?|Vulkan)[^:]*:' | tr '\n' ' ')"
+echo "== kernel: $(uname -r)"; cat /proc/cmdline
+echo "== extlinux"; grep -E '^\s*(linux|fdtdir|fdt|append)' /boot/extlinux/extlinux.conf | head -4
+echo "== journal: $(test -d /var/log/journal && echo persistent || echo volatile)"
+echo "== mem"; free -m | head -2
+echo "GCEND"
+systemctl poweroff

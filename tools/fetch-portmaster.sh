@@ -10,7 +10,7 @@ set -euo pipefail
 TAG=2026.11.17-0700
 TAG_COMMIT=872aadd8ecf1bc08c07968f5a173527a3ec18036   # refs/tags/2026.11.17-0700 (informational)
 SHA=d96a921ed3110f3c1b56b1f5b88d34539241723bd2fb003f29edbce5402a4fef
-OUT=$(readlink -f "${1:-$PWD/out-portmaster}"); mkdir -p "$OUT"
+OUT=${1:-$PWD/out-portmaster}; mkdir -p "$OUT"; OUT=$(readlink -f "$OUT")
 curl -fsSL -o "$OUT/PortMaster.zip.part" \
   "https://github.com/PortsMaster/PortMaster-GUI/releases/download/$TAG/PortMaster.zip"
 echo "$SHA  $OUT/PortMaster.zip.part" | sha256sum -c --quiet || { echo "PortMaster.zip: checksum mismatch" >&2; exit 1; }

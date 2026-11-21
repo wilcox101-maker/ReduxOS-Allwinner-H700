@@ -16,7 +16,8 @@ plus original configuration and scripts authored here.
 Each third-party component keeps its own upstream licence; this file tracks them for the aggregate image.
 If you believe anything here is mis-attributed, open an issue.
 
-Each source-built or injected component has a row below (first column = its name) with the pin it is built at.
+`tools/check-licences.sh` enforces this file against every built image: each source-built or injected
+component must have a row below (first column = its name), with the pin it was built at.
 
 ## Components
 

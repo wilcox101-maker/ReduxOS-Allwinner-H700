@@ -4,6 +4,13 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   docs:
     runs-on: ubuntu-24.04
@@ -14,22 +21,70 @@ jobs:
           chmod +x tools/check-docs.sh
           ./tools/check-docs.sh
 
-  # The image build + QEMU smoke + hardening/licence checks are wired but skipped until the
-  # build pipeline (image/build-image.sh and friends) is populated. See docs/status.md.
+  # Build a CI-profile image (Ubuntu QEMU kernel, no bootloader) with the source-built RetroArch, the
+  # launcher core, the OSK pointer and PortMaster injected, then boot it in QEMU (cortex-a53) and run the
+  # hardening + licence checks. The full source-built core set (~1.5 h) is a local build, not CI.
+  # Nothing is written to a card; only logs and reports are kept. Desk/QEMU only — not H700 hardware.
   build-and-smoke:
-    if: false  # TODO: enable once image/build-image.sh lands
     runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      OUT: ${{ github.workspace }}/out
+      ART: ${{ github.workspace }}/artifacts
     steps:
       - uses: actions/checkout@v4
-      - name: Set up aarch64 emulation
+
+      - name: Free disk space
         run: |
-          sudo apt-get update
-          sudo apt-get install -y qemu-user-static binfmt-support qemu-system-arm zstd genimage
-      - name: Build image (CI profile — no injected binaries)
-        run: sudo ./image/build-image.sh --ci
-      - name: QEMU smoke test
-        run: ./image/qemu/smoke-test.sh ./out/*.img
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h / | tail -1
+
+      - name: Set up build host (cross toolchain, arm64 multiarch, QEMU, binfmt)
+        run: sudo ./tools/setup-build-host.sh
+
+      - name: Restore RetroArch package
+        id: racache
+        uses: actions/cache@v4
+        with:
+          path: artifacts/retroarch
+          key: retroarch-${{ hashFiles('tools/build-retroarch.sh') }}
+
+      - name: Build RetroArch (pinned upstream, KMS/GLES only)
+        if: steps.racache.outputs.cache-hit != 'true'
+        run: ./tools/build-retroarch.sh "$ART/retroarch" "$RUNNER_TEMP/ra"
+
+      - name: Build launcher core + OSK pointer, fetch PortMaster
+        run: |
+          ./tools/build-redux-exec-core.sh "$ART/cores"
+          ./tools/build-osk-pointer.sh "$ART/osk"
+          ./tools/fetch-portmaster.sh "$ART/portmaster"
+
+      - name: Build image (CI profile — injected components only, never committed)
+        run: |
+          deb=$(ls "$ART"/retroarch/reduxos-retroarch_*_arm64.deb)
+          sudo OUT="$OUT" SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" \
+            RETROARCH_DEB="$deb" CORES_DIR="$ART/cores" OSK_POINTER="$ART/osk/redux-osk-pointer" \
+            PORTMASTER_ZIP="$ART/portmaster/PortMaster.zip" ./image/build-image.sh --ci
+
       - name: Hardening + licence checks
         run: |
-          ./image/check-hardening.sh ./out
-          ./tools/check-licences.sh ./out
+          sudo ./image/check-hardening.sh "$OUT"
+          sudo ./tools/check-licences.sh "$OUT"
+
+      - name: QEMU smoke test (512 MB, cortex-a53)
+        run: sudo GITHUB_STEP_SUMMARY="$GITHUB_STEP_SUMMARY" ./image/qemu/smoke-test.sh "$(ls "$OUT"/*.img)" 512
+
+      - name: Keep logs and reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-and-smoke-${{ github.run_id }}
+          if-no-files-found: ignore
+          retention-days: 14
+          path: |
+            out/*.qemu-*.log
+            out/*.smoke-*.txt
+            out/*.manifest.tsv
+            out/*.sources.tsv
+            out/*.sha256
+            out/genimage.log
