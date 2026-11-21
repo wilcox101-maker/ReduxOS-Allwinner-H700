@@ -22,7 +22,7 @@ tools, QEMU, the arm64 multiarch `-dev` packages and the aarch64 binfmt handler.
      (with its `-NOTICES.txt` and `.config` beside it); add `--dram lpddr4` or `--dram lpddr3` to assert the
      type. The DRAM type is part of the image name, a mismatch with the binary or its `.config` is an error
      (LPDDR3 settings put 1.2 V on 1.1 V LPDDR4), and `image/check-boot-layout.py` checks the result. Build
-     one image per DRAM type. The kernel and u-boot build scripts are not in this repo yet (docs/status.md).
+     one image per DRAM type. The kernel comes from `kernel/` (below); the u-boot binaries from `uboot/`.
 3. Checks on the built tree (read-only, on the build host):
    `sudo ./image/check-hardening.sh ./out` (SECURITY.md baseline) and `sudo ./tools/check-licences.sh ./out`
    (every component maps to a PROVENANCE.md row; no stock, BIOS or ROM material).
@@ -30,6 +30,18 @@ tools, QEMU, the arm64 multiarch `-dev` packages and the aarch64 binfmt handler.
    and checks first boot, per-unit identity, SSH off, firewall, no shipped credential, `retroarch --features`
    on the A53, every core loading, and no desktop stack in RetroArch's load closure. ~25 min under TCG.
 5. Writing to an SD card is manual and deliberate (see below) — the repo never writes a card for you.
+
+## Kernel (`kernel/`)
+`kernel/prepare-tree.sh` fetches torvalds/linux at the pinned commit, applies `kernel/patches/` and the base
+layer (`kernel/upstream/base-layer.txt`: upstream patchwork series by reference, checked by `git patch-id`),
+copies `kernel/dts/` in, and runs the desk checks (DTB schema check, W=1 build of touched files, checkpatch).
+`kernel/build-kernel.sh --build` then configures (arm64 defconfig, other platforms off,
+`kernel/config/rg34xxsp.config`, module allowlist), checks that every fragment line holds, that the boot path
+(SD slot 1, serial console) is built in, and that every enabled DT node has its driver, then builds
+`linux-image-<ver>-rg34xxsp_*.deb` into `$WORK/kernel-out/` (`KERNEL_DEB=`). Needs `bison flex bc libssl-dev
+device-tree-compiler dpkg-dev fakeroot rsync kmod cpio debhelper libdw-dev libelf-dev` (+ `dtschema` for the
+schema check). No display yet: the panel needs the display layer and an owner-generated panel file
+(PROVENANCE.md, category C).
 
 ## Injected-at-build (never committed)
 Large or source-built artifacts are produced by `tools/` scripts and injected via env vars (e.g.
