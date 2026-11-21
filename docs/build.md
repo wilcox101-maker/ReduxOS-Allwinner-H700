@@ -34,6 +34,15 @@ Large or source-built artifacts are produced by `tools/` scripts and injected vi
   `reduxos-retroarch_1.22.2-1reduxos1_arm64.deb` (Depends derived from the binary). Inject with
   `RETROARCH_DEB=`. Host: Ubuntu 24.04 x86_64 with `gcc/g++-aarch64-linux-gnu` and the arm64 multiarch `-dev`
   packages listed in the script header (~10 min on 2 CPUs).
+- `tools/build-libretro-cores.sh [-o OUTDIR] [--include-nc] [core ...]` — the cores in `tools/cores.tsv`, each
+  pinned to a full upstream commit (verified after fetch), cross-built and checked (aarch64, libretro API, GL
+  linkage); writes `BUILD-SUMMARY.tsv`, `SHA256SUMS` and each core's upstream licence files. Resumable; one
+  failing core does not stop the rest. Cores with a **non-commercial** licence are skipped unless
+  `--include-nc` (private builds only — such an image is not a publishable release). ~1.5 h on 2 CPUs.
+- `tools/build-redux-exec-core.sh OUTDIR` — the ReduxOS launcher core (runs ports/apps from playlists); put it
+  in the same OUTDIR and inject with `CORES_DIR=`.
+- `tools/build-osk-pointer.sh OUTDIR` — the fly-out OSK's gamepad→pointer bridge; `OSK_POINTER=`.
+- `tools/fetch-portmaster.sh OUTDIR` — PortMaster at a pinned release, SHA-256 checked; `PORTMASTER_ZIP=`.
 
 ## Reproducibility
 Pin every upstream (tag + commit/sha256). Record versions in [`../PROVENANCE.md`](../PROVENANCE.md). CI builds

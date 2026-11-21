@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# ReduxOS source-built libretro cores, cross-built for aarch64 (Cortex-A53, H700) by
+# tools/build-libretro-cores.sh and injected at image build (CORES_DIR=...). No binary is committed.
+# Every core is pinned to a full upstream commit SHA (immutable). None of these upstreams tags the
+# pinned commit, so the tag column is "-"; bumping a pin is a PR that also updates PROVENANCE.md.
+# Packaged noble cores (nestopia, gambatte, mgba, bsnes-mercury, beetle-*, desmume) are NOT listed here.
+#
+# licence: SPDX id, or "nc (...)" for a NON-COMMERCIAL licence. nc cores are SKIPPED unless
+#   tools/build-libretro-cores.sh --include-nc is given (private builds only): an image carrying one
+#   may not be published as a ReduxOS release, and tools/check-licences.sh fails on it unless ALLOW_NC=1.
+# kind: make = make -C <dir> -f <makefile> <args>;  cmake = cmake -S <dir> <args> + build
+# so:   the produced file, relative to the source root (or to the cmake build dir for kind=cmake)
+#core	repo	pin	kind	dir	makefile	args	so	licence	systems
+stella2014	https://github.com/libretro/stella2014-libretro	7d1361e407e63f29e52892655069e5fb4096e691	make	.	Makefile	platform=unix	stella2014_libretro.so	GPL-2.0	A2600
+a5200	https://github.com/libretro/a5200	40c6f2f1ad4a3145b328d5baaf010fae6c7e752b	make	.	Makefile	platform=unix	a5200_libretro.so	GPL-2.0	A5200
+prosystem	https://github.com/libretro/prosystem-libretro	8a88014287c7a01cd568067e5a557d0a2b2a051f	make	.	Makefile	platform=unix	prosystem_libretro.so	GPL-2.0	A7800
+atari800	https://github.com/libretro/libretro-atari800	4e7fbc73765c1a9670c7506616046ad1d4ccda51	make	.	Makefile	platform=unix	atari800_libretro.so	GPL-2.0	A800
+puae	https://github.com/libretro/libretro-uae	d366f77c60e5a5f059f129cc3773d3048306083b	make	.	Makefile	platform=unix	puae_libretro.so	GPL-2.0	AMIGA
+vice_x64	https://github.com/libretro/vice-libretro	76cde0b2cc4e52106618f2cc5d9d1112d9205c89	make	.	Makefile	platform=unix EMUTYPE=x64	vice_x64_libretro.so	GPL-2.0	C64
+vice_xvic	https://github.com/libretro/vice-libretro	76cde0b2cc4e52106618f2cc5d9d1112d9205c89	make	.	Makefile	platform=unix EMUTYPE=xvic	vice_xvic_libretro.so	GPL-2.0	VIC20
+picodrive	https://github.com/libretro/picodrive	1890c2932234c9d30f4cd3851d02228baae8f09e	make	.	Makefile.libretro	platform=unix ARCH=aarch64	picodrive_libretro.so	nc (MAME-style)	MD;MDCD;SMS;GG;SEGA32X
+gw	https://github.com/libretro/gw-libretro	91d599b951e7bfe7e040347f58667cba20074adc	make	.	Makefile	platform=unix	gw_libretro.so	Zlib	GW
+handy	https://github.com/libretro/libretro-handy	bc55d462f0b2d6b073ea93dc552ebd73cec60fd1	make	.	Makefile	platform=unix	handy_libretro.so	Zlib	LYNX
+race	https://github.com/libretro/RACE	c660d9ab5aafb47aefff90182ca90d319ad9b077	make	.	Makefile	platform=unix	race_libretro.so	GPL-2.0	NGP
+pokemini	https://github.com/libretro/PokeMini	132111b76343559860532a1ccc094f93f1ed5650	make	.	Makefile	platform=unix	pokemini_libretro.so	GPL-3.0	POKE
+vecx	https://github.com/libretro/libretro-vecx	dccff5402a16d1ea7c112095a8e42632bf149506	make	.	Makefile	platform=unix	vecx_libretro.so	GPL-3.0	VARCADE
+bluemsx	https://github.com/libretro/blueMSX-libretro	e3086eb5d36d77fa11704cf53dc176686e70127d	make	.	Makefile	platform=unix	bluemsx_libretro.so	nc (blueMSX)	MSX
+neocd	https://github.com/libretro/neocd_libretro	b1e04c738cb48a1dae0574b8877f6a116d270ca1	make	.	Makefile	platform=unix	neocd_libretro.so	LGPL-3.0	NEOCD
+fake08	https://github.com/jtothebell/fake-08	814991a2571ad3970e386cef48f3b148aa1c27b9	make	platform/libretro	Makefile	platform=unix	platform/libretro/fake08_libretro.so	MIT	PICO
+dosbox_pure	https://github.com/libretro/dosbox-pure	e39497e7c2a32c67c26e6598dd14f6d58c384bfd	make	.	Makefile	platform=unix	dosbox_pure_libretro.so	GPL-2.0	DOS
+mupen64plus_next	https://github.com/libretro/mupen64plus-libretro-nx	15bada85906593376e8fd697f1b0b3af3a20f512	make	.	Makefile	platform=unix GLES3=1 FORCE_GLES3=1 WITH_DYNAREC=aarch64 HAVE_PARALLEL_RSP=0 HAVE_THR_AL=1 LLE=0	mupen64plus_next_libretro.so	GPL-2.0	N64
+mame2003_plus	https://github.com/libretro/mame2003-plus-libretro	2a60eda71ae0fea543a76a43b5d58086a5485256	make	.	Makefile	platform=unix	mame2003_plus_libretro.so	nc (MAME)	MAME
+fbneo	https://github.com/libretro/FBNeo	84b9ef052091b8c0885a479f444ae08bd840bc4c	make	src/burner/libretro	Makefile	platform=unix	src/burner/libretro/fbneo_libretro.so	nc (FBNeo)	FBNEO;CPS1;CPS2;CPS3;NEOGEO
+flycast	https://github.com/flyinghead/flycast	6ab783f3be291894b9962523f381dd22b82f52d0	cmake	.	-	-DLIBRETRO=ON -DUSE_GLES=ON -DUSE_VULKAN=OFF -DCMAKE_BUILD_TYPE=Release	flycast_libretro.so	GPL-2.0	DREAMCAST;NAOMI
+ppsspp	https://github.com/hrydgard/ppsspp	77106069bf68fd80d4a7a5a519ae9d06b5677c4b	cmake	.	-	-DLIBRETRO=ON -DUSING_GLES2=ON -DUSING_EGL=OFF -DUSE_FFMPEG=ON -DUSE_SYSTEM_FFMPEG=OFF -DUSE_DISCORD=OFF -DUSE_MINIUPNPC=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_SHARED_LINKER_FLAGS=-Wl,--no-as-needed,-lGLESv2	lib/ppsspp_libretro.so	GPL-2.0	PSP
+pcsx_rearmed	https://github.com/libretro/pcsx_rearmed	7b0e8f8fadfbce3d170d195b9d9eecaabfa08c8e	make	.	Makefile.libretro	platform=unix	pcsx_rearmed_libretro.so	GPL-2.0	PS
