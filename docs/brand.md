@@ -19,6 +19,12 @@ Bronze → Silver → Gold, tied to project stage: **bronze while building, silv
 The orange monogram is the general promotional mark. To advance a phase, swap the logo referenced at the top
 of `README.md` to the next finish and set the repo's social-preview image to match.
 
+## Highlights banner
+`assets/brand/ReduxOS-highlights-banner.png` — a wide (1920×1008) hero banner: the bronze logo centered on
+black with the project's top-10 highlights, five per side. Column taglines: **"You already own the hardware"**
+(left) / **"Now control the software"** (right). Bronze (build-phase) version; regenerate in silver/gold to
+match the milestone when phases advance.
+
 ## Usage notes
 - README header currently points at the bronze logo.
 - Set the GitHub **social preview** image (Settings → General → Social preview) to the current-phase logo.
