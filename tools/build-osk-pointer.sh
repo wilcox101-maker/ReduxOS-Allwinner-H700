@@ -5,7 +5,7 @@
 # via sudo OSK_POINTER=<path> image/build-image.sh ...  usage: tools/build-osk-pointer.sh [OUTDIR]
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
-OUT=$(readlink -f "${1:-$PWD/out-osk}"); mkdir -p "$OUT"
+OUT=${1:-$PWD/out-osk}; mkdir -p "$OUT"; OUT=$(readlink -f "$OUT")
 TRIPLE=aarch64-linux-gnu
 command -v $TRIPLE-gcc >/dev/null || { echo "missing: $TRIPLE-gcc" >&2; exit 2; }
 $TRIPLE-gcc -O2 -static -Wall -Wextra -o "$OUT/redux-osk-pointer" "$HERE/redux-osk-pointer.c"

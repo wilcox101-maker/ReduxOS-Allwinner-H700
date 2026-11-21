@@ -6,7 +6,7 @@
 #   tools/build-redux-exec-core.sh <CORES_OUTDIR>   then   sudo CORES_DIR=<CORES_OUTDIR> image/build-image.sh ...
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
-OUT=$(readlink -f "${1:-$PWD/out-cores}"); mkdir -p "$OUT"
+OUT=${1:-$PWD/out-cores}; mkdir -p "$OUT"; OUT=$(readlink -f "$OUT")
 PIN=52781c4a8b5aae19d858f4a2326c8f8308c70f54   # libretro/libretro-common (master at pin time; untagged)
 T=aarch64-linux-gnu
 command -v $T-gcc >/dev/null || { echo "missing: $T-gcc" >&2; exit 2; }
