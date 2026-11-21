@@ -1,0 +1,10 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-only
+# redux-kbapp CMD [ARGS...] — run a non-RetroArch "keyboard app" with the fly-out on-screen keyboard.
+# Launches CMD fullscreen under the cage wlroots kiosk compositor, with wvkbd (a keyboard that flies
+# out from the bottom edge) and the gamepad->pointer bridge so the sticks drive the OSK. RetroArch is
+# never run this way (it has its own OSK). With no CMD, opens a terminal (foot) — i.e. an OSK shell.
+# DESK ONLY: needs the Mali GLES/KMS stack on hardware; not exercised in QEMU.
+set -u
+[ $# -ge 1 ] || set -- foot
+exec cage -- /usr/local/libexec/redux-kbapp-session "$@"

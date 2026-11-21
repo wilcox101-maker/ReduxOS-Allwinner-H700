@@ -1,0 +1,58 @@
+# ReduxOS game systems. Folder names follow the common H700 handheld card layout, so an existing
+# library drops in unchanged. core = libretro core basename (redux_exec = ReduxOS launcher core for .sh ports/apps);
+# "via:portmaster" = install it through PortMaster; "todo:<core>" = planned, not built; "unsupported".
+# bios = required BIOS filename(s) in <games>/bios/ ("-" none).
+#folder	label	core	bios	exts
+A2600	Atari 2600	stella2014	-	a26;bin;zip
+A5200	Atari 5200	a5200	5200.rom	a52;bin;zip
+A7800	Atari 7800	prosystem	7800 BIOS (U).rom	a78;bin;zip
+A800	Atari 800	atari800	ATARIXL.ROM;ATARIOSB.ROM	atr;xex;bin;zip
+AMIGA	Commodore Amiga	puae	kick13.rom;kick31.rom	adf;hdf;lha;zip
+ATARIST	Atari ST	todo:hatarib	tos.img	st;msa;zip
+C64	Commodore 64	vice_x64	-	d64;t64;crt;prg;zip
+CPS1	Capcom CPS-1	fbneo	neogeo.zip	zip
+CPS2	Capcom CPS-2	fbneo	neogeo.zip	zip
+CPS3	Capcom CPS-3	fbneo	neogeo.zip	zip
+DOS	MS-DOS	dosbox_pure	-	exe;com;bat;conf;zip
+DREAMCAST	Sega Dreamcast	flycast	dc_boot.bin;dc_flash.bin	cdi;gdi;chd;zip
+EASYRPG	RPG Maker 2000/3	todo:easyrpg	-	zip;ldb
+FBNEO	Arcade (FinalBurn Neo)	fbneo	neogeo.zip	zip
+FC	Nintendo NES	nestopia	-	nes;fds;unf;zip
+FDS	Famicom Disk System	nestopia	disksys.rom	fds;zip
+GB	Game Boy	gambatte	-	gb;zip
+GBA	Game Boy Advance	mgba	gba_bios.bin	gba;zip
+GBC	Game Boy Color	gambatte	-	gbc;zip
+GG	Sega Game Gear	picodrive	-	gg;zip
+GW	Game & Watch	gw	-	mgw;zip
+LYNX	Atari Lynx	handy	lynxboot.img	lnx;zip
+MAME	Arcade (MAME)	mame2003_plus	-	zip;chd
+MD	Sega Genesis/Mega Drive	picodrive	-	md;gen;bin;smd;zip
+MDCD	Sega CD	picodrive	bios_CD_U.bin;bios_CD_E.bin;bios_CD_J.bin	cue;chd;iso;zip
+MSX	MSX / MSX2	bluemsx	-	rom;dsk;mx1;mx2;zip
+N64	Nintendo 64	mupen64plus_next	-	n64;z64;v64;zip
+NAOMI	Sega NAOMI	flycast	naomi.zip	zip;bin;dat;lst
+NDS	Nintendo DS	desmume	bios7.bin;bios9.bin;firmware.bin	nds;zip
+NEOCD	Neo Geo CD	neocd	neocd.bin	cue;chd;zip
+NEOGEO	Neo Geo	fbneo	neogeo.zip	zip
+NGP	Neo Geo Pocket	race	-	ngp;ngc;zip
+ONS	ONScripter	todo:onscripter	-	zip
+OPENBOR	OpenBOR	via:portmaster	-	pak
+PCE	PC Engine / TG-16	beetle-pce-fast	-	pce;zip
+PCECD	PC Engine CD	beetle-pce-fast	syscard3.pce	cue;chd;zip
+PGM2	Arcade (PGM2; needs current MAME, too heavy)	unsupported	-	zip
+PICO	PICO-8 (fake-08 core; carts user-supplied)	fake08	-	p8;png
+POKE	Pokemon Mini	pokemini	-	min;zip
+PORTS	Ports (PortMaster)	redux_exec	-	sh
+PS	Sony PlayStation	pcsx_rearmed	scph5500.bin;scph5501.bin;scph5502.bin	cue;chd;pbp;m3u;zip
+PSP	Sony PSP	ppsspp	-	iso;cso;pbp
+SATURN	Sega Saturn	todo:yabasanshiro	sega_101.bin;mpr-17933.bin	cue;chd;zip
+SCUMMVM	ScummVM	via:portmaster	-	svm;scummvm
+SEGA32X	Sega 32X	picodrive	-	32x;bin;zip
+SFC	Super Nintendo	bsnes-mercury-performance	-	sfc;smc;zip
+SMS	Sega Master System	picodrive	-	sms;zip
+VARCADE	Vectrex	vecx	-	vec;bin;zip
+VB	Virtual Boy	beetle-vb	-	vb;zip
+VIC20	Commodore VIC-20	vice_xvic	-	prg;crt;zip
+WS	WonderSwan	beetle-wswan	-	ws;wsc;zip
+APPS	Apps (native)	redux_exec	-	sh;desktop
+JAVA	Java ME	todo:freej2me	-	jar

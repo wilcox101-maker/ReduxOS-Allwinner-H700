@@ -1,0 +1,37 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-only
+# redux-scan-roms [ROMS] [PLAYLIST_DIR] — write one RetroArch playlist per system folder, so each
+# game opens with the core systems.tsv names (no "pick a core" step). Only systems whose core is
+# installed get a playlist; ports and apps use the redux_exec launcher core. Rerun after adding games.
+# Defaults: ROMS=/roms, PLAYLIST_DIR=~/.config/retroarch/playlists. Never touches the games themselves.
+set -u
+SYS=${REDUX_SYSTEMS:-/usr/share/reduxos/systems.tsv}
+CORES=${REDUX_CORES:-/usr/lib/aarch64-linux-gnu/libretro}
+R=${1:-/roms}; PL=${2:-$HOME/.config/retroarch/playlists}
+[ -f "$SYS" ] || { echo "missing $SYS" >&2; exit 1; }
+mkdir -p "$PL" || exit 1
+esc() { local s=${1//\\/\\\\}; s=${s//\"/\\\"}; s=${s//$'\t'/\\t}; printf '%s' "$s"; }
+total=0; lists=0
+while IFS=$'\t' read -r folder label core bios exts; do
+  case "$folder" in ''|\#*) continue;; esac
+  case "$core" in *:*|todo*|unsupported|-) continue;; esac
+  depth=2; [ "$core" = redux_exec ] && depth=1   # ports keep their data dirs beside the .sh
+  so=$CORES/${core}_libretro.so; [ -f "$so" ] || continue
+  d=$R/$folder; [ -d "$d" ] || continue
+  name=$(printf '%s' "$label" | tr '/:' '--'); out="$PL/$name.lpl"
+  pat=(); IFS=';' read -ra ex <<< "$exts"
+  for e in "${ex[@]}"; do [ ${#pat[@]} -gt 0 ] && pat+=(-o); pat+=(-iname "*.$e"); done
+  items=(); n=0
+  while IFS= read -r -d '' f; do
+    case "$f" in *$'\n'*) continue;; esac
+    b=${f##*/}; items+=("$(printf '    {"path": "%s", "label": "%s", "core_path": "%s", "core_name": "%s", "crc32": "DETECT", "db_name": "%s"}' \
+      "$(esc "$f")" "$(esc "${b%.*}")" "$so" "$core" "$(esc "$name.lpl")")"); n=$((n+1))
+  done < <(find "$d" -maxdepth "$depth" -type f \( "${pat[@]}" \) ! -path '*/PortMaster/*' ! -name '.*' -print0 2>/dev/null | sort -z)
+  if [ $n -eq 0 ]; then rm -f "$out"; continue; fi
+  { printf '{\n  "version": "1.5",\n  "default_core_path": "%s",\n  "default_core_name": "%s",\n' "$so" "$core"
+    printf '  "label_display_mode": 0,\n  "right_thumbnail_mode": 0,\n  "left_thumbnail_mode": 0,\n  "sort_mode": 0,\n  "items": [\n'
+    for i in "${!items[@]}"; do printf '%s' "${items[$i]}"; [ "$i" -lt $((n-1)) ] && printf ','; printf '\n'; done
+    printf '  ]\n}\n'; } > "$out.tmp" && mv "$out.tmp" "$out"
+  total=$((total+n)); lists=$((lists+1))
+done < "$SYS"
+echo "redux-scan-roms: $total games in $lists playlists ($PL)"

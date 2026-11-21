@@ -1,0 +1,5 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-only
+# redux-files — the file manager (Midnight Commander) with the fly-out on-screen keyboard.
+# Any other keyboard app works the same way:  redux-kbapp <command>.  DESK ONLY (GLES/KMS stack).
+exec /usr/local/bin/redux-kbapp foot -e mc

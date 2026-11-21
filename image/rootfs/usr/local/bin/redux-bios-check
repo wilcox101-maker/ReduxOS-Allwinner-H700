@@ -1,0 +1,36 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-only
+# redux-bios-check [BIOSDIR]  — report which BIOS files each system still needs, and (optionally) check
+# drop-ins against an owner-supplied reference. Default BIOSDIR: /roms/bios. ReduxOS ships no BIOS and
+# no BIOS checksum list: put your own "filename<TAB>md5" lines in BIOSDIR/bios-reference.tsv to have
+# them verified. Read-only; no network.
+set -u
+B=${1:-/roms/bios}
+REF="$B/bios-reference.tsv"
+SYS=/usr/share/reduxos/systems.tsv
+[ -d "$B" ] || { echo "no BIOS dir: $B (run redux-setup-roms first)" >&2; exit 1; }
+declare -A WANT
+if [ -f "$REF" ]; then
+  while IFS=$'\t' read -r f md5 _; do case "$f" in ''|\#*) continue;; esac; WANT["$f"]="$md5"; done < "$REF"
+fi
+ok=0; bad=0; missing=0
+echo "== BIOS check: $B"
+# present files
+shopt -s nullglob
+for p in "$B"/*; do
+  [ -f "$p" ] || continue; f=$(basename "$p"); [ "$f" = bios-reference.tsv ] && continue; [ "$f" = README.txt ] && continue
+  ref=${WANT[$f]:-}
+  if [ -z "$ref" ]; then echo "  -     $f (present; no md5 to compare)"; continue; fi
+  got=$(md5sum "$p" | cut -d' ' -f1)
+  if [ "$got" = "$ref" ]; then echo "  ok    $f"; ok=$((ok+1)); else echo "  BAD   $f (md5 $got != $ref)"; bad=$((bad+1)); fi
+done
+# per-system required-BIOS status
+echo "== per-system required BIOS"
+while IFS=$'\t' read -r folder label core bios exts; do
+  case "$folder" in ''|\#*) continue;; esac; [ "$bios" = "-" ] && continue
+  IFS=';' read -ra req <<< "$bios"; have=0; need=0; miss=""
+  for r in "${req[@]}"; do if [ -f "$B/$r" ]; then have=$((have+1)); else need=$((need+1)); miss="$miss $r"; fi; done
+  if [ "$need" = 0 ]; then echo "  ok    $folder ($label)"; else echo "  need  $folder ($label):$miss"; missing=$((missing+need)); fi
+done < "$SYS"
+echo "== summary: $ok ok, $bad wrong-md5, $missing required files missing"
+[ "$bad" = 0 ]

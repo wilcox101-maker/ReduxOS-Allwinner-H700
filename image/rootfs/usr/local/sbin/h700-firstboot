@@ -1,0 +1,47 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-only
+# First boot on a freshly written card: per-unit identity, root partition grown to the card, and the
+# owner's optional SSH key. Growth uses sfdisk + partx + resize2fs (util-linux, fdisk, e2fsprogs),
+# all online: no reboot, no python.
+#
+# Per-unit identity: systemd writes a fresh /etc/machine-id (the image ships "uninitialized") and
+# ssh-keygen -A creates this unit's own host keys (the image ships none).
+# Owner provisioning (opt-in): if /boot/reduxos/authorized_keys exists (a plain text file the owner puts
+# on the FAT BOOT partition from a PC), it is installed for the "redux" admin account (sudo, no
+# password, key-only), SSH is enabled, and the file is removed from /boot. It is read as data only;
+# nothing on the card is executed. Without it SSH stays off and the image has no remote login at all.
+set -eu
+log() { echo "h700-firstboot: $*"; }
+ssh-keygen -A && log "SSH host keys generated"
+
+KEYS=/boot/reduxos/authorized_keys
+if [ -f "$KEYS" ] && id redux >/dev/null 2>&1; then
+	H=$(getent passwd redux | cut -d: -f6)
+	install -d -m 0700 -o redux -g redux "$H/.ssh"
+	# keep only lines that look like public keys
+	grep -E '^(ssh-(ed25519|rsa)|ecdsa-sha2-nistp(256|384|521)|sk-(ssh-ed25519|ecdsa-sha2-nistp256)@openssh\.com) ' "$KEYS" \
+		> "$H/.ssh/authorized_keys" || true
+	chown redux:redux "$H/.ssh/authorized_keys"; chmod 0600 "$H/.ssh/authorized_keys"
+	n=$(wc -l < "$H/.ssh/authorized_keys")
+	rm -f "$KEYS"
+	if [ "$n" -gt 0 ]; then
+		systemctl enable ssh.socket >/dev/null 2>&1 && systemctl --no-block start ssh.socket || true
+		log "owner key(s) installed for redux ($n); SSH enabled (key-only)"
+	else
+		log "$KEYS had no usable public key; SSH stays off"
+	fi
+else
+	log "no owner key on /boot/reduxos: SSH stays off"
+fi
+
+ROOTDEV=$(findmnt -no SOURCE /)
+DISK=/dev/$(lsblk -no PKNAME "$ROOTDEV")
+PART=$(cat "/sys/class/block/$(basename "$ROOTDEV")/partition")
+BEFORE=$(lsblk -bno SIZE "$ROOTDEV")
+# Only the last partition can grow; ",+" keeps its start and takes all free space after it.
+if echo ',+' | sfdisk --no-reread --no-tell-kernel -q -N "$PART" "$DISK"; then
+	partx -u -n "$PART" "$DISK"
+	resize2fs "$ROOTDEV" >/dev/null && log "root grown: $BEFORE -> $(lsblk -bno SIZE "$ROOTDEV") bytes"
+else
+	log "sfdisk could not grow partition $PART on $DISK; root left at $BEFORE bytes"
+fi

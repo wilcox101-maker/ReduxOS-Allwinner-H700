@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: GPL-2.0-only
+[Unit]
+Description=ReduxOS per-system RetroArch playlists
+After=reduxos-roms-setup.service local-fs.target
+Before=getty@tty1.service
+ConditionPathExists=/usr/local/bin/redux-scan-roms
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=player
+ExecStart=/usr/local/bin/redux-scan-roms /roms
+[Install]
+WantedBy=multi-user.target

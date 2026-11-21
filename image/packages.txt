@@ -1,25 +1,101 @@
-# ReduxOS — Allwinner H700 base package manifest (Ubuntu 24.04).
-# One package per line; comments with '#'. Keep this minimal — every line is image size.
-# Build from this, never from a stock rootfs.
+# SPDX-License-Identifier: GPL-2.0-only
+# ReduxOS — Allwinner H700 base package manifest (Ubuntu 24.04 "noble", arm64, main + universe).
+# One package per line; comments with '#'. Installed with mmdebstrap --variant=minbase, no Recommends.
+# This is the whole base: no stock rootfs. Every line is image size — justify anything large in the PR.
 
 # --- core boot/init ---
-systemd
+systemd-sysv
 udev
-netplan.io
+dbus
+kmod
+libpam-systemd
+apt
+tzdata
+netbase
+ca-certificates
+less
+nano
+sudo
+# SSH is installed but OFF until the owner provisions a key (SECURITY.md; image/rootfs/usr/local/sbin/h700-firstboot)
+openssh-server
 
-# --- graphics (Panfrost KMS/GLES) ---
-libgl1-mesa-dri
-libglx-mesa0
+# --- network ---
+iproute2
+iputils-ping
+iwd
+systemd-resolved
+systemd-timesyncd
+wireless-regdb
+# Wi-Fi firmware: one vendor's package, never the linux-firmware metapackage
+linux-firmware-realtek
+
+# --- memory: zram swap + userspace OOM killer (RAM tiers 512 MB .. 2 GB) ---
+systemd-zram-generator
+earlyoom
+
+# --- boot integration: extlinux.conf + DTB sync on every kernel install/remove; first-boot growth ---
+u-boot-menu
+libubootenv-tool
+rsync
+fdisk
+zstd
+
+# --- storage: exFAT game cards ---
+exfatprogs
+
+# --- graphics: Mesa Panfrost KMS/GLES only (never mesa-vulkan-drivers) ---
 libegl1
+libgles2
 libgbm1
+libgl1-mesa-dri
 
-# --- audio (ALSA only) ---
+# --- hardware tools ---
 alsa-utils
+alsa-ucm-conf
+libasound2-plugins
+brightnessctl
+bluez
+rfkill
+iw
+evtest
+v4l-utils
 
-# --- frontend deps (RetroArch built from source via tools/build-retroarch.sh) ---
-# (its runtime Depends come from the generated .deb)
+# --- security: host firewall, inbound default-deny ---
+nftables
 
-# --- utilities ---
+# --- frontend: RetroArch on KMS/GBM + GLES ---
+# "retroarch" is replaced by the source-built reduxos-retroarch .deb (RETROARCH_DEB=, tools/build-retroarch.sh).
+retroarch
+libretro-core-info
+# Packaged cores (DFSG, main/universe). Source-built cores are injected with CORES_DIR=.
+libretro-mgba
+libretro-gambatte
+libretro-nestopia
+libretro-bsnes-mercury-performance
+libretro-beetle-pce-fast
+libretro-beetle-wswan
+libretro-beetle-vb
+libretro-beetle-psx
+libretro-desmume
+# media player (KMS/DRM out) and OS-level volume keys
+mpv
+triggerhappy
+
+# --- console shell: legible font for the 720x480 panel, tmux ---
 kbd
+console-setup
+tmux
 
-# add packages deliberately; justify anything large in the PR.
+# --- fly-out on-screen keyboard for non-RetroArch keyboard apps (cage kiosk + wvkbd + foot) ---
+cage
+wvkbd
+foot
+mc
+
+# --- PortMaster runtime (python GUI on pySDL2; ports use SDL2 on KMS) ---
+python3
+libsdl2-2.0-0
+libsdl2-ttf-2.0-0
+libsdl2-image-2.0-0
+libsdl2-mixer-2.0-0
+unzip

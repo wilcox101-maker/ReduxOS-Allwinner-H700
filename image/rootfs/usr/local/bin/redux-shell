@@ -1,0 +1,5 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-only
+# redux-shell — a gamepad-usable terminal with the fly-out on-screen keyboard (foot under cage+wvkbd).
+# This is the on-device shell for a keyboardless RG34XX-SP. DESK ONLY (needs the GLES/KMS stack).
+exec /usr/local/bin/redux-kbapp foot -e bash -l

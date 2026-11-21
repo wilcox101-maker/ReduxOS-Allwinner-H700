@@ -18,17 +18,21 @@ If you believe anything here is mis-attributed, open an issue.
 
 Each source-built or injected component has a row below (first column = its name) with the pin it is built at.
 
-| Component | Upstream source | Licence | How it enters the image |
+## Components
+
+| Component | Upstream source (pin) | Licence | How it enters the image |
 |---|---|---|---|
-| Ubuntu base userspace | Ubuntu 24.04 archive | (per package) | `image/packages.txt` via apt |
-| Linux kernel | kernel.org + sunxi | GPL-2.0 | built from `kernel/` config (own tree) |
-| Mesa (Panfrost) | mesa3d.org / Ubuntu | MIT | Ubuntu package |
-| RetroArch | github.com/libretro/RetroArch (pinned tag) | GPL-3.0 | `tools/build-retroarch.sh` |
+| Ubuntu base userspace | Ubuntu 24.04 archive (`noble`, `-updates`, `-security`; main + universe) | (per package; `/usr/share/doc/<pkg>/copyright`) | `image/packages.txt` via mmdebstrap/apt |
+| Mesa (Panfrost) | mesa3d.org via Ubuntu `libgl1-mesa-dri` / `libgles2` | MIT | Ubuntu package |
+| Ubuntu QEMU kernel | Ubuntu `linux-image-<ver>-generic` (QEMU/CI images only; cannot boot an H700) | GPL-2.0 | `KERNEL=ubuntu` / `--ci` |
+| Linux kernel (H700) | kernel.org mainline + ReduxOS H700 config/device tree (not yet in this repo) | GPL-2.0 | injected `KERNEL_DEB=` |
+| U-Boot (H700 SPL + u-boot) | u-boot.org (not yet in this repo); per DRAM type (LPDDR4 / LPDDR3) | GPL-2.0+ (+ notices shipped as `/usr/share/doc/reduxos-bootloader/NOTICES.txt`) | injected `UBOOT_BIN=` |
+| ReduxOS scripts + config | this repository (`image/rootfs/`, `image/portmaster/`, `tools/*.c`) | GPL-2.0-only (per-file SPDX) | `image/build-image.sh` |
+| RetroArch | [libretro/RetroArch](https://github.com/libretro/RetroArch) tag `v1.22.2` = `69a4f0ea1e8aaf442ae4858f2e7f2b31a1776576` | GPL-3.0-or-later | `tools/build-retroarch.sh` → injected `RETROARCH_DEB=` (`reduxos-retroarch`) |
 | `redux_exec` | ReduxOS launcher core, `tools/redux-exec-core.c`; header `libretro.h` from [libretro/libretro-common](https://github.com/libretro/libretro-common) `52781c4a8b5aae19d858f4a2326c8f8308c70f54` (untagged; MIT) | GPL-2.0-only | `tools/build-redux-exec-core.sh` → `CORES_DIR=` |
-| `redux-osk-pointer` | ReduxOS gamepad→pointer bridge for the fly-out OSK, `tools/redux-osk-pointer.c` | GPL-2.0-only | `tools/build-osk-pointer.sh` → `OSK_POINTER=` |
+| `redux-osk-pointer` | ReduxOS, `tools/redux-osk-pointer.c` | GPL-2.0-only | `tools/build-osk-pointer.sh` → `OSK_POINTER=` |
 | PortMaster | [PortsMaster/PortMaster-GUI](https://github.com/PortsMaster/PortMaster-GUI) release `2026.11.17-0700` (tag commit `872aadd8ecf1bc08c07968f5a173527a3ec18036`), `PortMaster.zip` SHA-256 `d96a921ed3110f3c1b56b1f5b88d34539241723bd2fb003f29edbce5402a4fef` | MIT (bundles third-party helpers under their own licences) | `tools/fetch-portmaster.sh` → `PORTMASTER_ZIP=` |
 | libretro cores (packaged) | Ubuntu `libretro-*` packages listed in `image/packages.txt` | (per package) | Ubuntu package |
-| libretro cores (source-built) | per-core upstream, pinned commit — table below | (per core) | `tools/build-libretro-cores.sh` → `CORES_DIR=` |
 
 ## Source-built libretro cores
 
