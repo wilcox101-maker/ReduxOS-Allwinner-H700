@@ -10,8 +10,8 @@ not derived from Anbernic, Allwinner, or Canonical/Ubuntu branding, and ReduxOS 
 | File | Finish | Use |
 |---|---|---|
 | `ReduxOS-logo-bronze.png` | Bronze | **Current — the build phase** (pre-beta). This is the active logo now. |
-| `ReduxOS-logo-steel.png` | Silver / steel | **Beta** — switch the headline logo to this at the beta milestone. |
-| _gold variant (tbd)_ | Gold | **Release** — a brighter gold render for the 1.0 release milestone. The bronze may serve until a dedicated gold asset exists. |
+| `ReduxOS-logo-silver.png` | Silver | **Beta** — switch the headline logo to this at the beta milestone. |
+| `ReduxOS-logo-gold.png` | Gold | **Release** — switch to this at the 1.0 release milestone. |
 | `ReduxOS-logo-monogram.png` | Orange C+R monogram | **Promotion** — social/marketing and general promotional use. |
 
 ### Medal-tier progression (Dale, 2026-11-20)
