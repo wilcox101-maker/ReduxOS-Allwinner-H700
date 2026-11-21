@@ -22,6 +22,27 @@ A completely wide-open base, on hardware you own, that you can read, rebuild, an
 - **Frontend:** source-built RetroArch (KMS/EGL/GLES, ALSA) and open libretro cores. No bundled commercial BIOS.
 - **Everything reproducible:** every byte traces to an upstream source or a script in this repo.
 
+## What moving to 24.04 means for you
+If you own one of these handhelds, here's what a ground-up **Ubuntu 24.04 (Noble)** base gives you over the
+stock firmware:
+
+- **A modern, supported base.** Ubuntu 24.04 LTS — years of security updates, current libraries and toolchain,
+  not a frozen vendor build.
+- **Better graphics.** Mesa 24.x **Panfrost** for the Mali-G31 (KMS/GLES) — more mature than the stock stack,
+  with no proprietary GPU blob.
+- **Your device is yours.** No vendor device-lock (the stock "deeplayer" anti-tamper), no reboot-on-tamper,
+  nothing tying apps to a vendor kernel. You decide what runs.
+- **Secure by default — and per-unit.** SSH is **off** until you add your own key (no password login, ever);
+  SSH host keys and `machine-id` are generated **per unit on first boot**; the firewall is **on** with inbound
+  default-deny. None of the stock firmware's shared factory credentials.
+- **Open and rebuildable.** Everything builds from source and is documented (GPL-3.0) — you can read it, change
+  it, and build your own image.
+- **Year-2038 safe** (64-bit `time_t` on arm64), and **no telemetry** — nothing phones home.
+
+Honest trade-offs: it's a clean build, so you **bring your own games/BIOS** (legally); a few sandboxed ports
+may need an AppArmor tweak (24.04 restricts unprivileged user namespaces); and the newer stack is a little
+larger on disk. Full technical detail: [`docs/ubuntu-2404-notes.md`](docs/ubuntu-2404-notes.md).
+
 ## Supported hardware (H700 family — validate per unit)
 Allwinner **H700** SoC (4× Cortex-A53, Mali-G31). Target units include the Anbernic RG34XX-SP and other
 H700 models (RG35XX-H/Plus/SP/2024, RG28XX, RG40XX, etc.). Panel, DRAM size, and WiFi module vary per unit —
