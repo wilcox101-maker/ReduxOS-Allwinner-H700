@@ -1,0 +1,35 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  docs:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Markdown relative-link check
+        run: |
+          chmod +x tools/check-docs.sh
+          ./tools/check-docs.sh
+
+  # The image build + QEMU smoke + hardening/licence checks are wired but skipped until the
+  # build pipeline (image/build-image.sh and friends) is populated. See docs/status.md.
+  build-and-smoke:
+    if: false  # TODO: enable once image/build-image.sh lands
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up aarch64 emulation
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static binfmt-support qemu-system-arm zstd genimage
+      - name: Build image (CI profile — no injected binaries)
+        run: sudo ./image/build-image.sh --ci
+      - name: QEMU smoke test
+        run: ./image/qemu/smoke-test.sh ./out/*.img
+      - name: Hardening + licence checks
+        run: |
+          ./image/check-hardening.sh ./out
+          ./tools/check-licences.sh ./out

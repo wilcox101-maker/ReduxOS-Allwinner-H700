@@ -1,0 +1,25 @@
+# ReduxOS — Allwinner H700 base package manifest (Ubuntu 24.04).
+# One package per line; comments with '#'. Keep this minimal — every line is image size.
+# Build from this, never from a stock rootfs.
+
+# --- core boot/init ---
+systemd
+udev
+netplan.io
+
+# --- graphics (Panfrost KMS/GLES) ---
+libgl1-mesa-dri
+libglx-mesa0
+libegl1
+libgbm1
+
+# --- audio (ALSA only) ---
+alsa-utils
+
+# --- frontend deps (RetroArch built from source via tools/build-retroarch.sh) ---
+# (its runtime Depends come from the generated .deb)
+
+# --- utilities ---
+kbd
+
+# add packages deliberately; justify anything large in the PR.

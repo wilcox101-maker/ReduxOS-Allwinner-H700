@@ -1,0 +1,19 @@
+# build output / scratch
+/out/
+/build/
+*.img
+*.img.zst
+*.tar
+*.tar.*
+*.deb
+*.log
+# local, never committed (injected at build time; see docs/build.md)
+/local/
+*.key
+*.pem
+id_*
+# editor / OS
+.DS_Store
+*.swp
+.idea/
+.vscode/
