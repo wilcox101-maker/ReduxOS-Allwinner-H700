@@ -1,4 +1,10 @@
-# ReduxOS — Allwinner H700
+<p align="center">
+  <img src="assets/brand/ReduxOS-logo-bronze.png" alt="ReduxOS" width="200">
+</p>
+
+<h1 align="center">ReduxOS — Allwinner H700</h1>
+
+<p align="center"><em>Handheld Freedom. Hardware Unlocked.</em></p>
 
 **A clean, ground-up Ubuntu 24.04 LTS (Noble Numbat) build for Allwinner H700 handhelds (Anbernic RG-series).**
 
