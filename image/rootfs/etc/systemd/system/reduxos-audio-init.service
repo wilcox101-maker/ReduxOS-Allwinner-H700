@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-2.0-only
+[Unit]
+Description=ReduxOS codec mixer baseline
+After=sound.target alsa-restore.service
+Wants=sound.target
+ConditionPathExists=/usr/local/sbin/reduxos-audio-init.sh
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/reduxos-audio-init.sh
+[Install]
+WantedBy=multi-user.target

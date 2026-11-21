@@ -1,0 +1,50 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-only
+# redux-setup-roms [TARGET]  — build the ReduxOS game folder tree so ROMs and BIOS drop in with ease.
+# Creates TARGET/roms/<SYSTEM>/ for every system plus TARGET/roms/bios/, each with a README saying
+# which core and which BIOS file(s) it needs. Idempotent. Default TARGET: /roms (the games card).
+# No ROMs or BIOS are created — only the structure.
+set -u
+SYS=/usr/share/reduxos/systems.tsv
+T=${1:-/roms}
+[ -f "$SYS" ] || { echo "missing $SYS" >&2; exit 1; }
+mkdir -p "$T/bios" || { echo "cannot write $T" >&2; exit 1; }
+# BIOS folder: README for redux-bios-check.
+cat > "$T/bios/README.txt" <<TXT
+Drop BIOS files here (flat, exact filenames). Then run:  redux-bios-check
+This folder is RetroArch's "system" directory. No BIOS is shipped: add your own,
+legally obtained. Optional: list "filename<TAB>md5" lines in bios-reference.tsv
+here and redux-bios-check will verify them.
+TXT
+n=0
+while IFS=$'\t' read -r folder label core bios exts; do
+  case "$folder" in ''|\#*) continue;; esac
+  d="$T/$folder"; mkdir -p "$d"; n=$((n+1))
+  { echo "$label"
+    echo "Default core/engine: $core"
+    echo "Extensions: $exts"
+    [ "$bios" = "-" ] && echo "BIOS: none required" || echo "BIOS (into ../bios/): $bios"
+    echo "Put game files for $label in this folder."
+  } > "$d/README.txt"
+done < "$SYS"
+# saves/states for RetroArch; PortMaster expects lowercase /roms/ports, so link it to PORTS
+mkdir -p "$T/saves" "$T/states"
+[ -e "$T/ports" ] || ln -s PORTS "$T/ports" 2>/dev/null ||
+  echo "note: cannot symlink $T/ports (FAT/exFAT card?); PortMaster ports expect $T/ports" >&2
+# Launch stubs, run from RetroArch through the redux_exec launcher core (ReduxOS Launcher).
+stub() { [ -e "$1" ] || printf '#!/bin/bash\n# ReduxOS launcher stub (redux-setup-roms)\n%s\n' "$2" > "$1"; }
+[ -d "$T/PORTS" ] && stub "$T/PORTS/PortMaster.sh" 'exec /opt/tools/PortMaster/PortMaster.sh reduxos'
+if [ -d "$T/APPS" ]; then
+  stub "$T/APPS/Terminal.sh" 'exec redux-shell'
+  stub "$T/APPS/File Manager.sh" 'exec redux-files'
+  stub "$T/APPS/Rescan Games.sh" 'redux-scan-roms /roms; sleep 2'
+fi
+# The player runs RetroArch and PortMaster: it must own the tree (saves, states, port installs).
+# On ext4 this fixes ownership; a FAT/exFAT games card takes its owner from the mount (uid=player).
+if [ "$(id -u)" = 0 ] && id player >/dev/null 2>&1; then
+  chown -R player:player "$T/bios" "$T/saves" "$T/states" "$T"/*/README.txt 2>/dev/null
+  chown player:player "$T" "$T"/*/ "$T/PORTS"/*.sh "$T/APPS"/*.sh 2>/dev/null
+  chown -h player:player "$T/ports" 2>/dev/null
+fi
+echo "created $n system folders + bios/ under $T"
+echo "next: copy your ROMs into $T/<SYSTEM>/, BIOS into $T/bios/, then run redux-bios-check"

@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# /etc/default/u-boot for the RG34XX-SP image. Read by u-boot-update(8) (package u-boot-menu),
+# which rewrites /boot/extlinux/extlinux.conf on every kernel install or removal.
+# Our own name: modified Ubuntu may not carry the Ubuntu trademarks.
+U_BOOT_MENU_LABEL="ReduxOS RG34XX-SP"
+U_BOOT_ALTERNATIVES="default recovery"
+U_BOOT_TIMEOUT="10"
+# root= is filled in by the image builder (PARTUUID of partition 2).
+U_BOOT_ROOT="@ROOT@"
+# 'ro': systemd-fsck checks the root fs, then remounts it rw (our kernel boots without an initramfs).
+U_BOOT_PARAMETERS="ro rootwait console=ttyS0,115200 panic=10 quiet"
+# /boot is a separate FAT partition: copy each kernel's DTBs there as /dtb-<version>/ and use FDTDIR,
+# so u-boot's fdtfile (allwinner/<board>.dtb, set by the PE6 patch) resolves on the card.
+U_BOOT_SYNC_DTBS="true"

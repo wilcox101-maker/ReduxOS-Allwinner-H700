@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: GPL-2.0-only
+[Unit]
+Description=ReduxOS: mark this boot good (clears u-boot's boot counter after a kernel update)
+After=multi-user.target
+RequiresMountsFor=/boot
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/h700-boot-ok
+[Install]
+WantedBy=multi-user.target

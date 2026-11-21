@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: GPL-2.0-only
+[Unit]
+Description=ReduxOS first boot (per-unit SSH host keys, owner key, grow root partition)
+ConditionFirstBoot=yes
+DefaultDependencies=no
+After=systemd-remount-fs.service
+RequiresMountsFor=/boot
+Before=ssh.socket ssh.service sysinit.target
+Wants=first-boot-complete.target
+Before=first-boot-complete.target
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/h700-firstboot
+RemainAfterExit=yes
+[Install]
+WantedBy=sysinit.target

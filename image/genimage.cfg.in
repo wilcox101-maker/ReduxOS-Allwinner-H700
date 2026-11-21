@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# Card layout (provisional until confirmed on hardware): MBR; SPL+u-boot raw at 8 KiB; FAT32 /boot; ext4 root.
+# The root partition is created at its content size and grown to the card on first boot.
+image boot.vfat {
+	vfat {
+		label = "BOOT"
+		extraargs = "-F 32"
+	}
+	mountpoint = "/boot"
+	size = @BOOT_MB@M
+}
+
+image root.ext4 {
+	ext4 {
+		label = "rootfs"
+		use-mke2fs = true
+		features = "^metadata_csum_seed"
+	}
+	size = @ROOT_MB@M
+}
+
+image @IMAGE@ {
+	hdimage {
+		partition-table-type = "mbr"
+		disk-signature = @DISK_SIG@
+	}
+@UBOOT_PART@
+	partition boot {
+		partition-type = 0x0c
+		bootable = true
+		offset = 16M
+		image = "boot.vfat"
+	}
+	partition rootfs {
+		partition-type = 0x83
+		image = "root.ext4"
+	}
+}

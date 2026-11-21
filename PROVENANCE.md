@@ -18,9 +18,12 @@ If you believe anything here is mis-attributed, open an issue.
 
 | Component | Upstream source | Licence | How it enters the image |
 |---|---|---|---|
-| Ubuntu base userspace | Ubuntu 24.04 archive | (per package) | `image/packages.txt` via apt |
-| Linux kernel | kernel.org + sunxi | GPL-2.0 | built from `kernel/` config (own tree) |
-| Mesa (Panfrost) | mesa3d.org / Ubuntu | MIT | Ubuntu package |
+| Ubuntu base userspace | Ubuntu 24.04 archive (`noble`, `-updates`, `-security`; main + universe) | (per package; `/usr/share/doc/<pkg>/copyright`) | `image/packages.txt` via mmdebstrap/apt |
+| Ubuntu QEMU kernel | Ubuntu `linux-image-<ver>-generic` (QEMU/CI images only; cannot boot an H700) | GPL-2.0 | `KERNEL=ubuntu` / `--ci` |
+| Linux kernel (H700) | kernel.org mainline + ReduxOS H700 config/device tree (not yet in this repo) | GPL-2.0 | injected `KERNEL_DEB=` |
+| U-Boot (H700 SPL + u-boot) | u-boot.org (not yet in this repo); one build per DRAM type (LPDDR4 / LPDDR3) | GPL-2.0+ (notices shipped as `/usr/share/doc/reduxos-bootloader/NOTICES.txt`) | injected `UBOOT_BIN=` |
+| ReduxOS scripts + config | this repository (`image/rootfs/`, `image/portmaster/`) | GPL-2.0-only (per-file SPDX) | `image/build-image.sh` |
+| Mesa (Panfrost) | mesa3d.org via Ubuntu `libgl1-mesa-dri` / `libgles2` | MIT | Ubuntu package |
 | RetroArch | github.com/libretro/RetroArch (pinned tag) | GPL-3.0 | `tools/build-retroarch.sh` |
 | libretro cores | per-core upstream (pinned) | (per core) | `tools/build-cores.sh` |
 | _add rows as components are added_ | | | |

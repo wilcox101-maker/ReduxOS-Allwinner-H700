@@ -8,8 +8,18 @@
 
 ## Steps
 1. `image/packages.txt` — the Ubuntu 24.04 package manifest (the whole base; no stock rootfs).
-2. `sudo ./image/build-image.sh` — assembles the rootfs, installs packages, applies ReduxOS config, builds
-   the image under `./out/`. Writes only under `$OUT`; it never touches a block device.
+   `image/rootfs/` is the ReduxOS configuration copied over it (services, firewall, SSH policy, RetroArch
+   defaults, games-folder tools, OSK launchers).
+2. `sudo [ENV...] ./image/build-image.sh [--ci] [--dram lpddr4|lpddr3]` — mmdebstrap rootfs, ReduxOS config,
+   users, injected components, extlinux (u-boot-menu), genimage. Writes only under `$OUT` (default `./out`);
+   it never touches a block device. `--help` lists every variable.
+   - **QEMU / CI image:** `--ci` (= `KERNEL=ubuntu`, no bootloader). Ubuntu's generic arm64 kernel boots
+     in QEMU only; it cannot boot an H700. Image name ends in `-ubuntu-qemu.img`.
+   - **Device image:** `KERNEL_DEB=<ReduxOS H700 kernel .deb>` and `UBOOT_BIN=u-boot-<device>-<lpddr4|lpddr3>-<ver>.bin`
+     (with its `-NOTICES.txt` and `.config` beside it); add `--dram lpddr4` or `--dram lpddr3` to assert the
+     type. The DRAM type is part of the image name, a mismatch with the binary or its `.config` is an error
+     (LPDDR3 settings put 1.2 V on 1.1 V LPDDR4), and `image/check-boot-layout.py` checks the result. Build
+     one image per DRAM type. The kernel and u-boot build scripts are not in this repo yet (docs/status.md).
 3. `./image/qemu/smoke-test.sh ./out/<image>` — boots in QEMU and runs the checks (boot, frontend present,
    hardening, no desktop stacks, licence check).
 4. Writing to an SD card is manual and deliberate (see below) — the repo never writes a card for you.
@@ -22,11 +32,23 @@ Large or source-built artifacts are produced by `tools/` scripts and injected vi
 Pin every upstream (tag + commit/sha256). Record versions in [`../PROVENANCE.md`](../PROVENANCE.md). CI builds
 the image on every PR.
 
+## First boot and admin access
+No credential ships in the image: root, `player` and `redux` all have locked passwords, no SSH key is
+installed, and SSH is **off**. On first boot each unit generates its own SSH host keys and `/etc/machine-id`
+and grows the root partition to the card.
+
+- `player` (unprivileged, no sudo) is logged in on the console and runs RetroArch.
+- `redux` is the admin account (sudo, key-only). To use it, put your SSH **public** key(s) in
+  `reduxos/authorized_keys` on the card's FAT `BOOT` partition before the first boot. First boot installs them
+  for `redux`, turns SSH on (key-only; no password login for anyone, root included) and deletes the file
+  from `BOOT`. The file is read as data only; nothing on the card is executed.
+- Without that file there is no remote login at all; the console shell (as `player`) still works.
+
 ## Writing to a card (manual)
 > **Destructive — double-check the device node.** `zstdcat out/<image>.img.zst | sudo dd of=/dev/sdX bs=4M
 > status=progress conv=fsync` (replace `/dev/sdX` with your card). Nothing in this repo writes a card
 > automatically.
 
 ## Status
-Build pipeline scripts are being populated — see [`status.md`](status.md). `image/build-image.sh` is a stub
-until the pipeline lands.
+`image/build-image.sh` builds QEMU images today (desk only); the source-built frontend, cores and checks land
+in follow-up PRs — see [`status.md`](status.md).
