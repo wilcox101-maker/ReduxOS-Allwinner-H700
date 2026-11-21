@@ -28,6 +28,13 @@
 Large or source-built artifacts are produced by `tools/` scripts and injected via env vars (e.g.
 `RETROARCH_DEB=`, `CORES_DIR=`), so no binaries live in the repo. See each script's header.
 
+- `tools/build-retroarch.sh [OUTDIR]` — upstream RetroArch `v1.22.2` (pinned commit, verified after fetch),
+  cross-built for KMS/EGL/GLES 3.1 + udev + ALSA + FFmpeg only: no Qt, X11, Wayland, PulseAudio, JACK, SDL or
+  Vulkan, no buildbot core downloads. It fails if a desktop library is linked, then packages
+  `reduxos-retroarch_1.22.2-1reduxos1_arm64.deb` (Depends derived from the binary). Inject with
+  `RETROARCH_DEB=`. Host: Ubuntu 24.04 x86_64 with `gcc/g++-aarch64-linux-gnu` and the arm64 multiarch `-dev`
+  packages listed in the script header (~10 min on 2 CPUs).
+
 ## Reproducibility
 Pin every upstream (tag + commit/sha256). Record versions in [`../PROVENANCE.md`](../PROVENANCE.md). CI builds
 the image on every PR.

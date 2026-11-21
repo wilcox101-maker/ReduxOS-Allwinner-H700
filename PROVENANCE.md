@@ -24,7 +24,7 @@ If you believe anything here is mis-attributed, open an issue.
 | U-Boot (H700 SPL + u-boot) | u-boot.org (not yet in this repo); one build per DRAM type (LPDDR4 / LPDDR3) | GPL-2.0+ (notices shipped as `/usr/share/doc/reduxos-bootloader/NOTICES.txt`) | injected `UBOOT_BIN=` |
 | ReduxOS scripts + config | this repository (`image/rootfs/`, `image/portmaster/`) | GPL-2.0-only (per-file SPDX) | `image/build-image.sh` |
 | Mesa (Panfrost) | mesa3d.org via Ubuntu `libgl1-mesa-dri` / `libgles2` | MIT | Ubuntu package |
-| RetroArch | github.com/libretro/RetroArch (pinned tag) | GPL-3.0 | `tools/build-retroarch.sh` |
+| RetroArch | [libretro/RetroArch](https://github.com/libretro/RetroArch) tag `v1.22.2` = `69a4f0ea1e8aaf442ae4858f2e7f2b31a1776576` | GPL-3.0-or-later | `tools/build-retroarch.sh` → `reduxos-retroarch` .deb, injected `RETROARCH_DEB=` (never committed) |
 | libretro cores | per-core upstream (pinned) | (per core) | `tools/build-cores.sh` |
 | _add rows as components are added_ | | | |
 
