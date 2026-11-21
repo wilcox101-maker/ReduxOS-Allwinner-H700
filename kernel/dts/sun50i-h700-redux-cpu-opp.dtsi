@@ -1,0 +1,35 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+/*
+ * CPU OPP table for the ReduxOS RG34XX-SP tree. DRAFT, NOT BOOTED.
+ *
+ * The reference table is ROCKNIX's H700 table: upstream sun50i-h616-cpu-opp.dtsi (included by the
+ * upstream RG35XX trees this board tree builds on) with the changes of two ROCKNIX patches, tag
+ * 20261101 (cefc143), projects/ROCKNIX/devices/H700/patches/linux/:
+ *   0200-h700-update-opps.patch (Philippe Simons, 2024-12-04)
+ *   0210-h616-cpu-opp-mark-480MHz-as-suspend-opp.patch (Jacob Cook)
+ * Expressed here as overrides of the upstream table, not copied from those patches:
+ *   - drop 1032 MHz (speed5 only);
+ *   - offer 1320 MHz to speed5 too (opp-supported-hw 0x1d -> 0x3d);
+ *   - mark 1512 MHz turbo-mode: cpufreq treats it as a boost frequency, and boost is off unless
+ *     userspace enables it (/sys/devices/system/cpu/cpufreq/boost);
+ *   - mark 480 MHz as the suspend OPP.
+ * Condition: ROCKNIX's top-step voltages (1416 MHz at 1.10 V) are below the vendor's (1.15-1.16 V);
+ * a stress test on the device must pass before release, else that step is raised to the vendor's
+ * voltage for the grade. The critical trip is not changed by this file.
+ */
+
+&cpu_opp_table {
+	/delete-node/ opp-1032000000;
+
+	opp-480000000 {
+		opp-suspend;
+	};
+
+	opp-1320000000 {
+		opp-supported-hw = <0x3d>;
+	};
+
+	opp-1512000000 {
+		turbo-mode;
+	};
+};

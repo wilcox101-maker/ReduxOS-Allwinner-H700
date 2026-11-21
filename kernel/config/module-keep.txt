@@ -1,0 +1,118 @@
+# Module allowlist for the RG34XX-SP kernel.
+#
+# kernel/build-kernel.sh turns OFF every option that the base config (defconfig + platforms off +
+# rg34xxsp.config) builds as a module (=m), unless it is:
+#   - set in kernel/config/rg34xxsp.config, or
+#   - the driver of an enabled node in one of the RG34XX-SP device trees
+#     (found by tools/dt_driver_coverage.py --symbols), or
+#   - matched by a pattern below (shell-style globs on the symbol name, without CONFIG_).
+# Options another kept option selects come back on their own; build-kernel.sh reports them.
+# Built-in (=y) options are not touched here.
+#
+# One pattern per line; text after '#' is the reason.
+
+## Wi-Fi and Bluetooth stacks (the board's RTL8821CS needs them)
+CFG80211                # rtw88 depends on it
+MAC80211                # rtw88 depends on it
+RFKILL                  # Wi-Fi/BT on-off switch used by NetworkManager, iwd and bluetoothd
+BT                      # Bluetooth core
+BT_HIDP                 # classic Bluetooth keyboards and pads
+
+## Display, GPU and video engine: Allwinner and Mali parts only
+DRM                     # core
+DRM_EXEC
+DRM_GPUVM
+DRM_SCHED               # panfrost
+DRM_KMS_HELPER
+DRM_GEM_DMA_HELPER
+DRM_GEM_SHMEM_HELPER    # panfrost
+DRM_DISPLAY_HELPER
+DRM_CLIENT_LIB
+DRM_CLIENT_SELECTION
+DRM_SUN*                # Allwinner display engine, TCON and HDMI glue (for when H616 display lands)
+!DRM_SUN6I_DSI          # MIPI DSI: the RG34XX-SP panel is RGB with a 3-wire SPI setup, not DSI
+DRM_DW_HDMI*            # the HDMI controller the sun8i HDMI glue wraps (mini-HDMI port)
+DRM_PANFROST            # Mali-G31
+BACKLIGHT_CLASS_DEVICE  # panel backlight, once the display series lands
+BACKLIGHT_PWM
+MEDIA_SUPPORT           # Cedrus video engine depends on these
+VIDEO_DEV
+VIDEOBUF2_*
+V4L2_MEM2MEM_DEV
+V4L2_H264
+V4L2_VP9
+V4L2_JPEG_HELPER
+
+## Sound: on-board codec, simple cards, USB audio
+SND
+SOUND
+SND_PCM
+SND_TIMER
+SND_HWDEP
+SND_RAWMIDI
+SND_COMPRESS_OFFLOAD
+SND_DMAENGINE_PCM
+SND_SOC
+SND_SUN*                # Allwinner audio (the codec itself is found from the DT)
+SND_SIMPLE_CARD*
+SND_AUDIO_GRAPH_CARD*
+SND_USB_AUDIO           # USB headsets and DACs
+
+## Input and IIO helpers the stick driver uses
+INPUT_FF_MEMLESS        # rumble on add-on pads
+LEDS_CLASS_MULTICOLOR   # HID_PLAYSTATION depends on it (controller light bar)
+IIO_BUFFER_CB
+IIO_KFIFO_BUF
+IIO_TRIGGERED_BUFFER
+IIO_ADC_HELPER
+
+## CPU frequency governors: cheap, and battery modes may use them
+CPU_FREQ_GOV_*
+
+## Crypto: Wi-Fi (CCMP/GCMP), iwd, dm and filesystems pick algorithms at run time
+CRYPTO_*
+!CRYPTO_BENCHMARK       # test tool, not needed
+!CRYPTO_DEV_AMLOGIC_GXL # another SoC's engine
+!CRYPTO_DEV_CCREE       # another SoC's engine
+CRYPTO_LIB_*
+CRC_*
+ZSMALLOC                # zram
+ZSTD_COMPRESS           # zram zstd
+
+## File systems
+FUSE_FS                 # user-space file systems (e.g. mounting archives, MTP)
+OVERLAY_FS              # containers, live overlays
+
+## Networking
+NETFILTER_XTABLES       # iptables (legacy and compat) for a host firewall
+NETFILTER_XT_*
+!NETFILTER_XT_MATCH_IPVS # needs the IPVS load balancer, which is not kept
+NF_CONNTRACK
+NF_DEFRAG_IPV4
+NF_DEFRAG_IPV6
+NF_LOG_*
+IP_NF_IPTABLES
+IP6_NF_IPTABLES
+NF_TABLES*              # nftables host firewall (ReduxOS manifest §3)
+NFT_*
+NF_NAT                  # NAT/masquerade for a later Wi-Fi hotspot
+NF_REJECT_IPV4
+NF_REJECT_IPV6
+
+## USB
+USB_ACM                 # USB serial devices (CDC ACM)
+USB_SERIAL              # common USB-serial adapters, for hobby use
+USB_SERIAL_CP210X
+USB_SERIAL_FTDI_SIO
+USB_USBNET              # USB Ethernet adapters for setup without Wi-Fi
+USB_NET_CDCETHER
+USB_NET_CDC_NCM
+USB_NET_AX8817X
+USB_NET_AX88179_178A
+USB_RTL8152
+USB_RTL8153_ECM
+MII                     # used by the USB Ethernet drivers
+USB_CONFIGFS            # device mode over USB-C: network and serial console to a PC
+USB_LIBCOMPOSITE
+USB_F_*
+USB_U_*

@@ -1,0 +1,192 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+/*
+ * Anbernic RG34XX-SP, ReduxOS device tree. DRAFT, NOT BOOTED on this tree.
+ *
+ * Based on upstream sun50i-h700-anbernic-rg35xx-sp.dts (torvalds/linux 97d73c8, v7.4-rc2), included
+ * below. Board facts not in upstream (stick wiring, battery, TF2 slot, amplifier delay, thermal
+ * trip) were read from the vendor firmware's device tree and are written here as our own DT; no
+ * vendor file is copied (PROVENANCE.md, category B).
+ *
+ * What this adds on top of the upstream RG35XX SP tree:
+ *  1. Analog sticks via upstream adc-joystick + io-channel-mux (no out-of-tree driver).
+ *  2. CPU OPPs: upstream's H616 table with ROCKNIX's H700 changes, 1512 MHz as boost (off by
+ *     default) (sun50i-h700-redux-cpu-opp.dtsi).
+ *  3. GPU OPPs 420-600 MHz on the fixed 0.94 V shared rail (sun50i-h700-redux-gpu-opp.dtsi).
+ *  4. Battery charge voltage capped at the vendor's 4.10 V (upstream's RG35XX tree says 4.20 V).
+ *  5. Speaker amplifier delay 100 ms, as the vendor sets it (needs kernel/patches/0002; without it
+ *     the property is ignored and mainline's 700 ms applies).
+ *  6. Stick-click buttons L3/R3 on PE8/PE9 (same pins as upstream RG35XX-H).
+ * What it deliberately does NOT add:
+ *  - Display/panel nodes: the panel must come from the display patch set AND a panel identified
+ *    at boot (u-boot DT selection). Never guess a panel.
+ *
+ * Thermal: the vendor's settings (sun50i-h700-redux-thermal.dtsi): CPU critical trip 115 C,
+ * no GPU/VE/DDR trips.
+ */
+
+#include "sun50i-h700-anbernic-rg35xx-sp.dts"
+#include "sun50i-h700-redux-gpu-opp.dtsi"
+#include "sun50i-h700-redux-cpu-opp.dtsi"
+#include "sun50i-h700-redux-thermal.dtsi"
+
+/ {
+	model = "Anbernic RG34XX-SP";
+	compatible = "anbernic,rg34xx-sp", "allwinner,sun50i-h700";
+
+	/*
+	 * Sticks: GPADC channel 0 behind a 4-way analog mux; mux select A0/A1 = PI1/PI2,
+	 * mux enable PI0, driven high. Same wiring as the
+	 * upstream RG35XX-H tree. Axis order and signs below are UNVERIFIED: confirm with evtest
+	 * (ROCKNIX inverts the right stick on this model, relative to its own driver).
+	 * The vendor polls at 20 ms; upstream RG35XX-H uses 60 ms. 16 ms is one 60 Hz frame.
+	 */
+	adc-joystick {
+		compatible = "adc-joystick";
+		io-channels = <&redux_adc_mux 0>, <&redux_adc_mux 1>,
+			      <&redux_adc_mux 2>, <&redux_adc_mux 3>;
+		pinctrl-0 = <&redux_joy_mux_en_pin>;
+		pinctrl-names = "default";
+		poll-interval = <16>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		axis@0 {
+			reg = <0>;
+			abs-flat = <32>;
+			abs-fuzz = <32>;
+			abs-range = <4096 0>;	/* left X, sign to verify */
+			linux,code = <ABS_X>;
+		};
+
+		axis@1 {
+			reg = <1>;
+			abs-flat = <32>;
+			abs-fuzz = <32>;
+			abs-range = <0 4096>;	/* left Y, sign to verify */
+			linux,code = <ABS_Y>;
+		};
+
+		axis@2 {
+			reg = <2>;
+			abs-flat = <32>;
+			abs-fuzz = <32>;
+			abs-range = <4096 0>;	/* right X, reversed vs RG35XX-H, to verify */
+			linux,code = <ABS_RX>;
+		};
+
+		axis@3 {
+			reg = <3>;
+			abs-flat = <32>;
+			abs-fuzz = <32>;
+			abs-range = <0 4096>;	/* right Y, reversed vs RG35XX-H, to verify */
+			linux,code = <ABS_RY>;
+		};
+	};
+
+	redux_adc_mux: adc-mux {
+		compatible = "io-channel-mux";
+		channels = "left_x", "left_y", "right_x", "right_y";
+		#io-channel-cells = <1>;
+		io-channels = <&gpadc 0>;
+		io-channel-names = "parent";
+		mux-controls = <&redux_gpio_mux>;
+		settle-time-us = <100>;
+	};
+
+	/*
+	 * Second card slot (TF2) power: PE4, driven high. UNVERIFIED on mainline.
+	 */
+	redux_reg_vcc_tf2: regulator-vcc-tf2 {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc-tf2";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&pio 4 4 GPIO_ACTIVE_HIGH>;	/* PE4 */
+		enable-active-high;
+	};
+
+	redux_gpio_mux: mux-controller {
+		compatible = "gpio-mux";
+		mux-gpios = <&pio 8 1 GPIO_ACTIVE_LOW>,	/* PI1 = mux A0 */
+			    <&pio 8 2 GPIO_ACTIVE_LOW>;	/* PI2 = mux A1 */
+		#mux-control-cells = <0>;
+	};
+};
+
+/*
+ * Battery, as the vendor configures the AXP717: charge target 4100 mV, capacity 3000 mAh,
+ * internal resistance 170 mOhm. Charge current stays at upstream's 1024 mA (the vendor uses
+ * 1500 mA) until a charging-temperature check on the device.
+ */
+&battery {
+	voltage-max-design-microvolt = <4100000>;
+	charge-full-design-microamp-hours = <3000000>;
+	factory-internal-resistance-micro-ohms = <170000>;
+};
+
+/*
+ * Second card slot (TF2): 4-bit SD on the PC pins, card detect polled (broken-cd), slot power
+ * PE4, I/O supply ALDO1. ALDO1 has no voltage constraints upstream, so the MMC core can only
+ * switch it on and off, as the vendor does: its voltage is never changed. 50 MHz, no 1.8 V modes.
+ * UNVERIFIED: not run on hardware.
+ */
+&mmc2 {
+	vmmc-supply = <&redux_reg_vcc_tf2>;
+	vqmmc-supply = <&reg_aldo1>;
+	bus-width = <4>;
+	broken-cd;
+	disable-wp;
+	cap-sd-highspeed;
+	no-1-8-v;
+	no-sdio;
+	no-mmc;
+	max-frequency = <50000000>;
+	status = "okay";
+};
+
+/*
+ * ALDO3 is always-on under the vendor firmware with no named consumer. Upstream leaves it
+ * unused, so mainline would switch it off at late init. Keep it on, at the voltage the boot
+ * chain left, until a device check shows what it feeds.
+ */
+&reg_aldo3 {
+	regulator-always-on;
+};
+
+&codec {
+	allwinner,pa-delay-ms = <100>;	/* vendor amplifier delay */
+};
+
+&gpadc {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	status = "okay";
+
+	channel@0 {
+		reg = <0>;
+	};
+};
+
+&gpio_keys_gamepad {
+	button-thumbl {
+		label = "GPIO Thumb Left";
+		gpios = <&pio 4 8 GPIO_ACTIVE_LOW>; /* PE8 */
+		linux,input-type = <EV_KEY>;
+		linux,code = <BTN_THUMBL>;
+	};
+
+	button-thumbr {
+		label = "GPIO Thumb Right";
+		gpios = <&pio 4 9 GPIO_ACTIVE_LOW>; /* PE9 */
+		linux,input-type = <EV_KEY>;
+		linux,code = <BTN_THUMBR>;
+	};
+};
+
+&pio {
+	/* PI0: analog mux enable, output high while the sticks are read. */
+	redux_joy_mux_en_pin: joy-mux-en-pin {
+		pins = "PI0";
+		function = "gpio_out";
+	};
+};

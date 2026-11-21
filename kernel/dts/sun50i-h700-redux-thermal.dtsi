@@ -1,0 +1,27 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+/*
+ * Thermal settings as the vendor firmware sets them: CPU zone passive trips 60/70 C and critical trip
+ * 115 C; no critical trips on GPU/VE/DDR, which the vendor does not set. ReduxOS rule: the critical
+ * trip is never changed from the vendor's. Included by sun50i-h700-anbernic-rg34xx-sp-redux.dts.
+ * DRAFT, NOT BOOTED.
+ */
+
+&cpu_critical {
+	temperature = <115000>;
+};
+
+/ {
+	thermal-zones {
+		gpu-thermal {
+			/delete-node/ trips;
+		};
+
+		ve-thermal {
+			/delete-node/ trips;
+		};
+
+		ddr-thermal {
+			/delete-node/ trips;
+		};
+	};
+};

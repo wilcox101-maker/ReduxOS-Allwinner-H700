@@ -1,0 +1,38 @@
+From 418704ae91b5f1ab978901721d099fbb4cc0d08f Mon Sep 17 00:00:00 2001
+From: Redux_Kernel_Research <redux@invalid>
+Date: Fri, 13 Nov 2026 21:19:34 -0500
+Subject: [PATCH 2/6] ASoC: dt-bindings: allwinner,sun4i-a10-codec: add
+ allwinner,pa-delay-ms
+
+Document an optional delay, in milliseconds, between enabling the
+external speaker amplifier and the speaker being ready. The driver keeps
+700 ms when the property is absent.
+
+Draft for the Redux project.
+
+This patch was drafted with an AI coding assistant (Claude).
+---
+ .../bindings/sound/allwinner,sun4i-a10-codec.yaml          | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/sound/allwinner,sun4i-a10-codec.yaml b/Documentation/devicetree/bindings/sound/allwinner,sun4i-a10-codec.yaml
+index b4eca702f..668ac0439 100644
+--- a/Documentation/devicetree/bindings/sound/allwinner,sun4i-a10-codec.yaml
++++ b/Documentation/devicetree/bindings/sound/allwinner,sun4i-a10-codec.yaml
+@@ -102,6 +102,13 @@ properties:
+     maxItems: 1
+     description: GPIO to enable the external amplifier
+ 
++  allwinner,pa-delay-ms:
++    description:
++      Time to wait after enabling the external amplifier before audio is
++      expected on the speaker.
++    default: 700
++    maximum: 2000
++
+   hp-det-gpios:
+     maxItems: 1
+     description: GPIO for headphone/line-out detection
+-- 
+2.43.0
+

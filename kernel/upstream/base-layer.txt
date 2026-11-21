@@ -1,0 +1,18 @@
+# Base layer: upstream patch series carried on top of torvalds/linux 97d73c8 and kernel/patches/,
+# by reference only. tools/apply_upstream.py downloads each series from kernel patchwork, checks
+# every patch's `git patch-id --stable` (a hash of the code change only), applies the listed
+# patches and commits each with its original author, date and message. Nothing from these patches
+# is stored in this repository. Drop an entry once mainline has it.
+#
+# Format:
+#   series <patchwork id> <version> <date> <author>  <title>
+#   patch  <n> <patch-id>  apply|skip  [reason]
+#   fix    <n> replace <old>|<new>          literal text edit of the downloaded patch
+#   fix    <n> drop-hunk <text>             remove the hunk that contains <text>
+#   fix    <n> reanchor                     re-place a pure-addition hunk whose context drifted
+
+
+## CPU cooling map for the H616 thermal zone (Jernej Skrabec, sunxi co-maintainer). Without it the
+## CPU zone's passive trips (60/70 C) throttle nothing, and only the 110 C critical trip acts.
+series 1202209 1 2026-11-04 Jernej-Skrabec  arm64: dts: allwinner: h616: Add CPU cooling map
+patch  1 1b71410119601d9b0fedf909da3b82d03e64f285 apply

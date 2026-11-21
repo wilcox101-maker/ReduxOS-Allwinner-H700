@@ -1,0 +1,66 @@
+From cd9e82d3d08aceea744458679b8e0caa9a9740e9 Mon Sep 17 00:00:00 2001
+From: Redux_Kernel_Research <redux@invalid>
+Date: Fri, 13 Nov 2026 21:19:35 -0500
+Subject: [PATCH 3/6] ASoC: sun4i-codec: make the speaker amplifier delay
+ configurable
+
+The speaker DAPM event sleeps a fixed 700 ms after enabling the external
+amplifier. On handhelds that power the speaker path up and down often,
+this delays or clips short UI sounds. Read the optional
+allwinner,pa-delay-ms property (default 700, so existing boards are
+unchanged).
+
+The Anbernic RG34XX-SP vendor kernel uses 100 ms for the same amplifier.
+
+Draft for the Redux project, compile-tested only.
+
+This patch was drafted with an AI coding assistant (Claude).
+---
+ sound/soc/sunxi/sun4i-codec.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/sound/soc/sunxi/sun4i-codec.c b/sound/soc/sunxi/sun4i-codec.c
+index 9d5bc3d7b..e3463ecb6 100644
+--- a/sound/soc/sunxi/sun4i-codec.c
++++ b/sound/soc/sunxi/sun4i-codec.c
+@@ -333,6 +333,7 @@ struct sun4i_codec {
+ 	struct reset_control *rst;
+ 	struct gpio_desc *gpio_pa;
+ 	struct gpio_desc *gpio_hp;
++	u32 pa_delay_ms;
+ 
+ 	/* ADC_FIFOC register is at different offset on different SoCs */
+ 	struct regmap_field *reg_adc_fifoc;
+@@ -1668,13 +1669,13 @@ static int sun4i_codec_spk_event(struct snd_soc_dapm_widget *w,
+ 	gpiod_set_value_cansleep(scodec->gpio_pa,
+ 				 !!SND_SOC_DAPM_EVENT_ON(event));
+ 
+-	if (SND_SOC_DAPM_EVENT_ON(event)) {
++	if (SND_SOC_DAPM_EVENT_ON(event) && scodec->pa_delay_ms) {
+ 		/*
+-		 * Need a delay to wait for DAC to push the data. 700ms seems
+-		 * to be the best compromise not to feel this delay while
+-		 * playing a sound.
++		 * Need a delay to wait for DAC to push the data. 700ms by
++		 * default seems to be the best compromise not to feel this
++		 * delay while playing a sound; boards can set their own.
+ 		 */
+-		msleep(700);
++		msleep(scodec->pa_delay_ms);
+ 	}
+ 
+ 	return 0;
+@@ -2344,6 +2345,10 @@ static int sun4i_codec_probe(struct platform_device *pdev)
+ 		return dev_err_probe(&pdev->dev, PTR_ERR(scodec->gpio_pa),
+ 				     "Failed to get pa gpio\n");
+ 
++	scodec->pa_delay_ms = 700;
++	of_property_read_u32(pdev->dev.of_node, "allwinner,pa-delay-ms",
++			     &scodec->pa_delay_ms);
++
+ 
+ 	scodec->gpio_hp = devm_gpiod_get_optional(&pdev->dev, "hp-det", GPIOD_IN);
+ 	if (IS_ERR(scodec->gpio_hp))
+-- 
+2.43.0
+
