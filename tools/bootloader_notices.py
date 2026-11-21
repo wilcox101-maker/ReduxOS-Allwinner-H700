@@ -35,7 +35,7 @@ REPO_TEXTS = {"Unicode-DFS-2016": "Unicode-DFS-2016.txt"}
 REPO_TEXT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "licences")
 # Ids already reviewed whose text is unavailable; still warned about, with what was decided.
 KNOWN_FLAGS = {"Intel": "lib/binman.c + include/binman.h: Google copyright under u-boot's own 'Intel' tag "
-                        "(no text in u-boot); upstream report drafted, docs/upstream-drafts/u-boot-binman-spdx.md"}
+                        "(no text in u-boot); to be reported upstream"}
 # Licences whose full text is the notice in each file's header (reproduced verbatim by section()).
 KNOWN_HEADER_ONLY = {"BSD-2-Clause-FreeBSD", "LZMA-SDK-9.22"}
 
