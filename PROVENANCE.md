@@ -21,7 +21,7 @@ If you believe anything here is mis-attributed, open an issue.
 | Ubuntu base userspace | Ubuntu 24.04 archive | (per package) | `image/packages.txt` via apt |
 | Linux kernel | kernel.org + sunxi | GPL-2.0 | built from `kernel/` config (own tree) |
 | Mesa (Panfrost) | mesa3d.org / Ubuntu | MIT | Ubuntu package |
-| RetroArch | github.com/libretro/RetroArch (pinned tag) | GPL-3.0 | `tools/build-retroarch.sh` |
+| RetroArch | [libretro/RetroArch](https://github.com/libretro/RetroArch) tag `v1.22.2` = `69a4f0ea1e8aaf442ae4858f2e7f2b31a1776576` | GPL-3.0-or-later | `tools/build-retroarch.sh` → `reduxos-retroarch` .deb, injected `RETROARCH_DEB=` (never committed) |
 | libretro cores | per-core upstream (pinned) | (per core) | `tools/build-cores.sh` |
 | _add rows as components are added_ | | | |
 
