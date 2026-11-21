@@ -36,6 +36,9 @@ while [ $# -gt 0 ]; do
 	shift
 done
 
+# Local commits in the kernel tree (git am, tools/apply_upstream.py) keep each patch's author; the
+# committer is this fixed identity, so a host without a git identity (CI runners) works and builds match.
+export GIT_COMMITTER_NAME=reduxos GIT_COMMITTER_EMAIL=reduxos@invalid
 log() { printf '\n== %s\n' "$*"; }
 fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
 for tool in git make gcc aarch64-linux-gnu-gcc dtc python3 curl; do
