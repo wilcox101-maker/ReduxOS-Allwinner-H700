@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/brand/ReduxOS-logo-bronze.png" alt="ReduxOS" width="200">
+  <img src="assets/brand/ReduxOS-highlights-banner.png" alt="ReduxOS — Allwinner H700" width="100%">
 </p>
 
 <h1 align="center">ReduxOS — Allwinner H700</h1>
