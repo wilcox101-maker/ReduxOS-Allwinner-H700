@@ -1,0 +1,6 @@
+# Compatibles that never bind a driver of their own. Used with dt_driver_coverage.py --ignore.
+anbernic,rg34xx-sp          # machine compatible (root node)
+arm,cortex-a53              # CPU nodes, handled by the architecture code
+cache                       # L2 cache description
+simple-battery              # battery data, read by the charger/fuel-gauge driver
+allwinner,sun20i-d1-hstimer # only selectable on 32-bit ARM; arm64 uses the architected timer (arm,armv8-timer)

@@ -19,6 +19,19 @@ If you believe anything here is mis-attributed, open an issue.
 `tools/check-licences.sh` enforces this file against every built image: each source-built or injected
 component must have a row below (first column = its name), with the pin it was built at.
 
+## Board facts and the clean-room line
+
+Decision (Dale, via the Manager, 2026-11-21) for the kernel and bootloader inputs:
+- **A — upstream and original work:** build scripts, checker tools, config fragments, pinned upstream
+  sources, upstream patches carried by reference. Public.
+- **B — hardware facts, written as our own code/DT:** which pins and rails the board uses, regulator and
+  battery values, thermal trips, the amplifier delay, the PE6 panel-ID strap and the LPDDR3 electrical
+  parameters. These were read from the vendor firmware's device tree and boot loader; no vendor file or
+  code is copied. Public, with the origin stated in each file.
+- **C — data copied from the vendor firmware:** the panel init register tables and the vendor's CPU OPP
+  table + speed-bin decoder. **Not in this repository.** The panel will be initialised from a file the
+  owner generates from their own vendor card (proposal pending); the CPU uses upstream/ROCKNIX OPPs.
+
 ## Components
 
 | Component | Upstream source (pin) | Licence | How it enters the image |
@@ -26,7 +39,7 @@ component must have a row below (first column = its name), with the pin it was b
 | Ubuntu base userspace | Ubuntu 24.04 archive (`noble`, `-updates`, `-security`; main + universe) | (per package; `/usr/share/doc/<pkg>/copyright`) | `image/packages.txt` via mmdebstrap/apt |
 | Mesa (Panfrost) | mesa3d.org via Ubuntu `libgl1-mesa-dri` / `libgles2` | MIT | Ubuntu package |
 | Ubuntu QEMU kernel | Ubuntu `linux-image-<ver>-generic` (QEMU/CI images only; cannot boot an H700) | GPL-2.0 | `KERNEL=ubuntu` / `--ci` |
-| Linux kernel (H700) | kernel.org mainline + ReduxOS H700 config/device tree (not yet in this repo) | GPL-2.0 | injected `KERNEL_DEB=` |
+| Linux kernel (H700) | [torvalds/linux](https://github.com/torvalds/linux) `97d73c8251226cf27cc6656b4c542869bb8c69fa` (after v7.4-rc2; untagged) + `kernel/patches/` + `kernel/upstream/base-layer.txt` (patchwork series by reference, `git patch-id` checked) + `kernel/dts/` + `kernel/config/` | GPL-2.0 (DTs GPL-2.0-only OR BSD-2-Clause) | `kernel/build-kernel.sh` → `linux-image-<ver>-rg34xxsp` .deb, injected `KERNEL_DEB=` |
 | U-Boot (H700 SPL + u-boot) | u-boot.org (not yet in this repo); per DRAM type (LPDDR4 / LPDDR3) | GPL-2.0+ (+ notices shipped as `/usr/share/doc/reduxos-bootloader/NOTICES.txt`) | injected `UBOOT_BIN=` |
 | ReduxOS scripts + config | this repository (`image/rootfs/`, `image/portmaster/`, `tools/*.c`) | GPL-2.0-only (per-file SPDX) | `image/build-image.sh` |
 | RetroArch | [libretro/RetroArch](https://github.com/libretro/RetroArch) tag `v1.22.2` = `69a4f0ea1e8aaf442ae4858f2e7f2b31a1776576` | GPL-3.0-or-later | `tools/build-retroarch.sh` → injected `RETROARCH_DEB=` (`reduxos-retroarch`) |

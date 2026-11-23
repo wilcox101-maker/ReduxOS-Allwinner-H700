@@ -1,0 +1,37 @@
+From 1e9e930be039eec4bc014949912866fbe33ce39a Mon Sep 17 00:00:00 2001
+From: Redux Kernel Research <redux@invalid>
+Date: Sat, 14 Nov 2026 08:32:11 -0500
+Subject: [PATCH] dt-bindings: opp: sun50i: allow turbo-mode and opp-suspend
+
+The H6/H616 OPP binding lists the OPP node properties it accepts and
+rejects everything else, so a board can't mark an OPP as a boost
+frequency (turbo-mode) or as the frequency to use while suspending
+(opp-suspend). Both are generic properties of opp-v2-base.yaml and the
+cpufreq-dt driver honours them. Allow them.
+
+An H700 handheld uses both: its fastest OPP is a boost frequency, off
+by default, and its slowest OPP is used during suspend.
+
+This patch was drafted with an AI coding assistant (Claude) and checked
+with dt_binding_check and dtbs_check. It has not been tested on
+hardware.
+---
+ .../bindings/opp/allwinner,sun50i-h6-operating-points.yaml      | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/opp/allwinner,sun50i-h6-operating-points.yaml b/Documentation/devicetree/bindings/opp/allwinner,sun50i-h6-operating-points.yaml
+index 91f3b9251..a72d0148c 100644
+--- a/Documentation/devicetree/bindings/opp/allwinner,sun50i-h6-operating-points.yaml
++++ b/Documentation/devicetree/bindings/opp/allwinner,sun50i-h6-operating-points.yaml
+@@ -61,6 +61,8 @@ patternProperties:
+       opp-hz: true
+       clock-latency-ns: true
+       opp-microvolt: true
++      opp-suspend: true
++      turbo-mode: true
+       opp-supported-hw:
+         maxItems: 1
+         description:
+-- 
+2.43.0
+

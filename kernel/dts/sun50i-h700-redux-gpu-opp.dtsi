@@ -1,0 +1,48 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+/*
+ * GPU (Mali-G31, Panfrost) OPPs for the RG34XX-SP. DRAFT, NOT BOOTED.
+ *
+ * The vendor firmware runs 420/456/504/552/600 MHz at 0.90 V and 648 MHz at 0.96 V. Upstream feeds
+ * the GPU from DCDC2 ("vdd-gpu-sys", fixed 0.94 V), a rail SHARED with the system logic.
+ *
+ * Policy here:
+ *  - DCDC2 stays fixed at upstream's 0.94 V. We never lower the system rail below that.
+ *  - 420-600 MHz run at 0.94 V: at or above the vendor's 0.90 V, so no undervolting.
+ *  - 648 MHz is LEFT OUT: enabling it means raising the shared rail to 0.96 V. Add it only after
+ *    measuring DCDC2 under the vendor firmware while a game runs.
+ */
+
+/ {
+	redux_gpu_opp_table: opp-table-reduxgpu {
+		compatible = "operating-points-v2";
+
+		opp-420000000 {
+			opp-hz = /bits/ 64 <420000000>;
+			opp-microvolt = <940000>;
+		};
+
+		opp-456000000 {
+			opp-hz = /bits/ 64 <456000000>;
+			opp-microvolt = <940000>;
+		};
+
+		opp-504000000 {
+			opp-hz = /bits/ 64 <504000000>;
+			opp-microvolt = <940000>;
+		};
+
+		opp-552000000 {
+			opp-hz = /bits/ 64 <552000000>;
+			opp-microvolt = <940000>;
+		};
+
+		opp-600000000 {
+			opp-hz = /bits/ 64 <600000000>;
+			opp-microvolt = <940000>;
+		};
+	};
+};
+
+&gpu {
+	operating-points-v2 = <&redux_gpu_opp_table>;
+};
