@@ -31,7 +31,20 @@ SPL_OFF = 8 * KIB
 GAP_END = 1 * MIB            # genimage.cfg.in: u-boot partition 8K + 1016K
 BOOT_OFF = 16 * MIB
 DISK_SIG = 0x48373030
-DTBS = ("sun50i-h700-anbernic-rg34xx-sp-redux-panel.dtb", "sun50i-h700-anbernic-rg34xx-sp-redux.dtb")
+# The DTB u-boot picks for each PE6 level comes from its .config (next to the binary); these are the fallbacks.
+DTBS = {"low": "sun50i-h700-anbernic-rg34xx-sp-redux.dtb", "high": "sun50i-h700-anbernic-rg34xx-sp-redux.dtb"}
+
+
+def uboot_dtbs(ubin):
+    """PE6 low/high DT names from the u-boot .config written next to the binary, if any."""
+    cfg = os.path.splitext(ubin)[0] + ".config" if ubin else None
+    out = dict(DTBS)
+    if cfg and os.path.exists(cfg):
+        for lvl in ("low", "high"):
+            m = re.search(r'^CONFIG_ANBERNIC_RG34XXSP_DT_PE6_%s="(?:allwinner/)?([^"]+)"' % lvl.upper(), open(cfg).read(), re.M)
+            if m:
+                out[lvl] = m.group(1)
+    return out
 
 fails = []
 
@@ -171,10 +184,10 @@ def main():
             r = subprocess.run(["mdir", "-b", "-i", fat, "::" + k], capture_output=True, text=True, env=env)
             check(r.returncode == 0, "kernel %s on the FAT" % k)
         for d in fdtdirs:
-            for dtb in DTBS:
+            for lvl, dtb in sorted(uboot_dtbs(ubin).items()):
                 path = d.rstrip("/") + "/allwinner/" + dtb
                 r = subprocess.run(["mdir", "-b", "-i", fat, "::" + path], capture_output=True, text=True, env=env)
-                check(r.returncode == 0, "%s (PE6 %s)" % (path, "low" if "panel" in dtb else "high"))
+                check(r.returncode == 0, "%s (PE6 %s)" % (path, lvl))
 
     print("7. u-boot environment vs fw_env.config")
     if 2 in p and cfg:

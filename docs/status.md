@@ -14,9 +14,8 @@ Every claim in this repo is tagged by evidence: `[D]` config/file, `[G]` static/
 - [ ] Firewall-enabled baseline confirmed
 
 ## Notes
-The build tooling was ported from a prior research line. Not yet here: the u-boot build (until it lands, device images need
-`UBOOT_BIN=` injected), the display layer and panel path, and the cores hatarib, yabasanshiro, easyrpg and
-onscripter. The kernel builds from `kernel/` (no display). CI runs the `--ci` profile (Ubuntu's generic kernel, QEMU only).
+The build tooling was ported from a prior research line. Not yet here: the display layer and panel path, and the cores hatarib, yabasanshiro, easyrpg and
+onscripter. The kernel builds from `kernel/` (no display), the bootloader from `uboot/`. CI runs the `--ci` profile (Ubuntu's generic kernel, QEMU only).
 
 Known, desk-only findings:
 - RetroArch links no desktop stack itself, but Ubuntu's FFmpeg brings X11/xcb **client** libraries into its

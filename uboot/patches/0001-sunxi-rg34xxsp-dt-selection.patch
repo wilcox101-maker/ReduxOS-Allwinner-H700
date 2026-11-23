@@ -1,0 +1,160 @@
+From 5ebf3b737f32270c3a947d3ae7eae4d333fd1af3 Mon Sep 17 00:00:00 2001
+From: H700 Ubuntu project <noreply@localhost>
+Date: Fri, 13 Nov 2026 19:45:15 -0500
+Subject: [PATCH] sunxi: add Anbernic RG34XX-SP device tree selection by panel
+ ID
+
+The Anbernic RG34XX-SP has been built with two LCD panels that need
+different init sequences. The stock Anbernic U-Boot (2018.05, releases
+from 2025-04 and 2026-05) identifies the panel by pulsing the panel
+reset line (PI14) and then reading PE6 with the internal pull-up
+enabled: low selects the original panel ("boe"), high selects the newer
+panel (the V1.0.6 release sends the "v2" init sequence on that path).
+
+Repeat that check in misc_init_r() and set "fdtfile" accordingly, so a
+single image can boot both board revisions with the matching device
+tree. The device tree names are Kconfig strings. The defaults are the
+project's trees: the original panel (NV3052C) gets the tree with the
+panel, the newer panel (controller not identified yet) gets the tree
+without display nodes. Setting the environment variable
+"panel_autodetect" to "no" keeps the existing "fdtfile".
+
+Gated by CONFIG_ANBERNIC_RG34XXSP_DT_SELECTION (default n) because it
+drives PI14 and changes the pull of PE6.
+
+Derived from read-only analysis of the stock bootloader binary; no
+vendor code is included. Not yet tested on hardware.
+---
+ arch/arm/mach-sunxi/Kconfig | 32 ++++++++++++++++++
+ board/sunxi/board.c         | 65 +++++++++++++++++++++++++++++++++++++
+ 2 files changed, 97 insertions(+)
+
+diff --git a/arch/arm/mach-sunxi/Kconfig b/arch/arm/mach-sunxi/Kconfig
+index e979ee4a..1d65314f 100644
+--- a/arch/arm/mach-sunxi/Kconfig
++++ b/arch/arm/mach-sunxi/Kconfig
+@@ -1212,6 +1212,38 @@ config PINEPHONE_DT_SELECTION
+ 	  Enable this option to automatically select the device tree for the
+ 	  correct PinePhone hardware revision during boot.
+ 
++config ANBERNIC_RG34XXSP_DT_SELECTION
++	bool "Select the Anbernic RG34XX-SP device tree from the panel ID pin"
++	depends on MACH_SUN50I_H616
++	help
++	  The Anbernic RG34XX-SP ships with two LCD panels that need
++	  different init sequences. The stock bootloader tells them apart
++	  by the level of PE6 (with the internal pull-up enabled) after a
++	  reset pulse on the panel reset line PI14: low selects the
++	  original ("boe") panel, high selects the newer panel.
++
++	  With this option U-Boot repeats that check and sets "fdtfile" to
++	  ANBERNIC_RG34XXSP_DT_PE6_LOW or ANBERNIC_RG34XXSP_DT_PE6_HIGH, so
++	  extlinux/boot scripts load the matching device tree. Set the
++	  environment variable "panel_autodetect" to "no" to keep the
++	  existing "fdtfile".
++
++	  Only enable this for RG34XX-SP builds: it drives PI14 and changes
++	  the pull of PE6, which may have other uses on other boards.
++
++config ANBERNIC_RG34XXSP_DT_PE6_LOW
++	string "Device tree for PE6 low (original panel)"
++	depends on ANBERNIC_RG34XXSP_DT_SELECTION
++	default "allwinner/sun50i-h700-anbernic-rg34xx-sp-redux-panel.dtb"
++
++config ANBERNIC_RG34XXSP_DT_PE6_HIGH
++	string "Device tree for PE6 high (newer panel)"
++	depends on ANBERNIC_RG34XXSP_DT_SELECTION
++	default "allwinner/sun50i-h700-anbernic-rg34xx-sp-redux.dtb"
++	help
++	  The newer panel's controller is not identified yet and has no
++	  kernel driver, so the default tree has no display nodes.
++
+ config BLUETOOTH_DT_DEVICE_FIXUP
+ 	string "Fixup the Bluetooth controller address"
+ 	default ""
+diff --git a/board/sunxi/board.c b/board/sunxi/board.c
+index 2929bc17..a5dcd448 100644
+--- a/board/sunxi/board.c
++++ b/board/sunxi/board.c
+@@ -810,6 +810,67 @@ static void setup_environment(const void *fdt)
+ 	}
+ }
+ 
++#ifdef CONFIG_ANBERNIC_RG34XXSP_DT_SELECTION
++/*
++ * Anbernic RG34XX-SP panel identification.
++ *
++ * Mirrors the stock Anbernic U-Boot 2018.05 (2025 and V1.0.6 releases),
++ * function "lcd_panel_uboot_fj035fhd05_v1_init":
++ *   - PI14 (panel reset) output: high 15 ms, low 50 ms, high 100 ms
++ *   - PE6 input with pull-up, then read the PE data register
++ *   - PE6 low  -> lcd_type "boe" (original panel)
++ *   - PE6 high -> newer panel (stock V1.0.6 sends the "v2" init sequence)
++ * Register access is direct because this runs before any panel driver
++ * and the pins are not described in U-Boot's device tree.
++ */
++#define RG34XXSP_PANEL_RESET	SUNXI_GPI(14)
++#define RG34XXSP_PANEL_ID	SUNXI_GPE(6)
++
++static void *rg34xxsp_dat_reg(u32 pin)
++{
++	return (void *)(uintptr_t)SUNXI_PIO_BASE +
++	       (pin >> 5) * SUNXI_PINCTRL_BANK_SIZE + 0x10;
++}
++
++static void rg34xxsp_set_out(u32 pin, int val)
++{
++	clrsetbits_le32(rg34xxsp_dat_reg(pin), BIT(pin & 0x1f),
++			val ? BIT(pin & 0x1f) : 0);
++}
++
++static void rg34xxsp_select_dt(void)
++{
++	const char *env = env_get("panel_autodetect");
++	const char *dtb;
++	int pe6;
++
++	if (env && !strcmp(env, "no"))
++		return;
++
++	/* Panel reset pulse, as the stock bootloader does before the read. */
++	rg34xxsp_set_out(RG34XXSP_PANEL_RESET, 1);
++	sunxi_gpio_set_cfgpin(RG34XXSP_PANEL_RESET, SUNXI_GPIO_OUTPUT);
++	mdelay(15);
++	rg34xxsp_set_out(RG34XXSP_PANEL_RESET, 0);
++	mdelay(50);
++	rg34xxsp_set_out(RG34XXSP_PANEL_RESET, 1);
++	mdelay(100);
++
++	sunxi_gpio_set_cfgpin(RG34XXSP_PANEL_ID, SUNXI_GPIO_INPUT);
++	sunxi_gpio_set_pull(RG34XXSP_PANEL_ID, SUNXI_GPIO_PULL_UP);
++	udelay(100);
++	pe6 = !!(readl(rg34xxsp_dat_reg(RG34XXSP_PANEL_ID)) &
++		 BIT(RG34XXSP_PANEL_ID & 0x1f));
++	sunxi_gpio_set_pull(RG34XXSP_PANEL_ID, SUNXI_GPIO_PULL_DISABLE);
++
++	dtb = pe6 ? CONFIG_ANBERNIC_RG34XXSP_DT_PE6_HIGH :
++		    CONFIG_ANBERNIC_RG34XXSP_DT_PE6_LOW;
++	printf("RG34XX-SP: panel ID PE6=%d, fdtfile=%s\n", pe6, dtb);
++	env_set("fdtfile", dtb);
++	env_set("panel_id", pe6 ? "v2" : "boe");
++}
++#endif
++
+ int misc_init_r(void)
+ {
+ 	const char *spl_dt_name;
+@@ -841,6 +902,10 @@ int misc_init_r(void)
+ 		env_set("fdtfile", str);
+ 	}
+ 
++#ifdef CONFIG_ANBERNIC_RG34XXSP_DT_SELECTION
++	rg34xxsp_select_dt();
++#endif
++
+ 	setup_environment(gd->fdt_blob);
+ 
+ 	return 0;
+-- 
+2.43.0
+

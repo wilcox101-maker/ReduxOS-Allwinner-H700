@@ -43,6 +43,18 @@ device-tree-compiler dpkg-dev fakeroot rsync kmod cpio debhelper libdw-dev libel
 schema check). No display yet: the panel needs the display layer and an owner-generated panel file
 (PROVENANCE.md, category C).
 
+## Bootloader (`uboot/`)
+`uboot/build-uboot.sh [--dram lpddr4|lpddr3|all] [--sources] [--config-only]` builds TF-A BL31 (`v2.14.0`) and
+SPL + u-boot (`v2026.10`, `anbernic_rg35xx_h700_defconfig` + `uboot/config/` + `uboot/patches/`), both pinned and
+verified after fetch, one binary per DRAM type. It checks that every fragment line holds, the DRAM type and the
+DRAM size cap (no cap below 2 GiB), the eGON SPL header and checksum, the size against the 1 MiB card gap and the
+PE6 DT-selection and boot-limit fallback code; it writes `u-boot-rg34xxsp-<dram>-<ver>.bin` + `.config` +
+`SHA256SUMS` and `u-boot-rg34xxsp-<ver>-NOTICES.txt` (licence notices of every compiled file, which must ship
+with the binary) to `$WORK/u-boot-out` (`UBOOT_BIN=`). `--sources` also writes the corresponding source.
+Needs `bison flex bc swig python3-dev python3-pyelftools libssl-dev libgnutls28-dev device-tree-compiler`.
+**A wrong DRAM type can leave a card unbootable and LPDDR3 settings put 1.2 V on 1.1 V LPDDR4**: build one image
+per type and write the matching one; first boots on a spare card.
+
 ## Injected-at-build (never committed)
 Large or source-built artifacts are produced by `tools/` scripts and injected via env vars (e.g.
 `RETROARCH_DEB=`, `CORES_DIR=`), so no binaries live in the repo. See each script's header.
